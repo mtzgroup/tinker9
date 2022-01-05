@@ -46,6 +46,7 @@ foreach (var ${T9_CUCCLIST})
       "SHELL:-gencode arch=compute_${var},code=sm_${var}"
    )
 endforeach ()
+target_compile_options (tinker9_cu PRIVATE "SHELL:-ccbin $ENV{CXX}" ) # Henry 20211210: Specify host compiler
 ## Debug add flag: -lineinfo
 ## Release add flag: --use_fast_math
 target_compile_options (tinker9_cu PRIVATE

@@ -412,6 +412,13 @@ void empole_generic_ewald_recip_acc()
    }    // end for (int i)
 }
 
+// Henry 20211209: Add template implementation
+template void empole_generic_ewald_recip_acc<calc::V0, 0>();
+template void empole_generic_ewald_recip_acc<calc::V1, 0>();
+template void empole_generic_ewald_recip_acc<calc::V3, 0>();
+template void empole_generic_ewald_recip_acc<calc::V4, 0>();
+template void empole_generic_ewald_recip_acc<calc::V5, 0>();
+template void empole_generic_ewald_recip_acc<calc::V6, 0>();
 
 void empole_chgpen_nonewald_acc(int vers, int use_cf)
 {
