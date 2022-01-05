@@ -382,13 +382,19 @@ if (NOT HOST)
    set (CMAKE_CXX_COMPILER "${T9_ACC_COMPILER}")
    # 11   unrecognized preprocessing directive
    # 177  variable was declared but never referenced
-   string (APPEND CMAKE_CXX_FLAGS " --diag_suppress=11,177")
+   # string (APPEND CMAKE_CXX_FLAGS " --diag_suppress=11,177") # Henry 20211209: comment this line out
    # Compute Capability 60,70 -> ,cc60,cc70
    set (__T9_ACC_CCLST4) # ""
    foreach (var ${T9_CUCCLIST})
       string (APPEND __T9_ACC_CCLST4 ",cc${var}")
    endforeach () # ,cc60,cc70
 endif ()
+
+
+# Henry 20220104: for building shared libraries
+string (APPEND CMAKE_Fortran_FLAGS " -fPIC")
+string (APPEND CMAKE_CXX_FLAGS " -fPIC")
+string (APPEND CMAKE_CUDA_FLAGS " --compiler-options -fPIC")
 
 
 ########################################################################

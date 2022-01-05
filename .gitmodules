@@ -1,3 +1,3 @@
-[submodule "tinker"]
-	path = tinker
-	url = https://github.com/TinkerTools/Tinker
+[submodule "tinker8_tinkerbox"]
+	path = tinker8_tinkerbox
+	url = https://github.com/mtzgroup/tinker8_tinkerbox

@@ -1,0 +1,13 @@
+module load NVIDIA_HPC_SDK/21.9-GCC-7.2.0-CUDA-11.4.1;
+module load CMake/3.16.4;
+mkdir build; cd build;
+export ACC=nvc++; # This is critical
+export FC=gfortran; export CC=gcc; export CXX=g++;
+
+cmake .. -DCMAKE_BUILD_TYPE=Release -DHOST=0 -DPREC=mixed -DCUDA_DIR=/global/software/CUDA/11.4.1 -DCOMPUTE_CAPABILITY=50,60,80;
+make;
+
+### Note to configure NVIDIA_HPC_SDK, after installing nvhpc_2021_219_Linux_x86_64_cuda_multi
+# cd hpc_sdk/Linux_x86_64/21.9/compilers/bin;
+# ./makelocalrc -d . -x -gcc /global/software/GCCcore/7.2.0/bin/gcc -gpp /global/software/GCCcore/7.2.0/bin/g++ -g77 /global/software/GCCcore/7.2.0/bin/gfortran; # Change the gcc version associated with nvc++
+

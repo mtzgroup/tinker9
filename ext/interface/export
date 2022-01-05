@@ -13,7 +13,7 @@ export LC_COLLATE=C
 
 check_from_github() {
     echo "Checking updates on GitHub..."
-    url_base="https://raw.githubusercontent.com/TinkerTools/tinker9/master/ext/interface"
+    url_base="https://raw.githubusercontent.com/mtzgroup/tinker9_tinkerbox/tinkberbox/ext/interface"
     vnum=$(curl -s "$url_base/version.txt")
     if [[ $vnum =~ ^-?[0-9]+$ ]]; then
         # If vnum is a valid integer, compare it to the local version number.
