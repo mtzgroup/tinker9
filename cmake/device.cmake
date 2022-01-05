@@ -20,6 +20,18 @@ target_link_libraries (tinker9
 )
 
 
+add_library (tinkerbox SHARED src/tinkerbox.cpp)
+target_link_libraries (tinkerbox
+   tinker9_acc
+   tinker9_cu
+   tinker9_cpp
+   tinker9_version
+   tinker9_f
+   tinkerFToCpp
+   ${__T9_EXTRA_LINK_FLAGS}
+)
+
+
 add_executable (all.tests)
 target_link_libraries (all.tests
    __t9_all_tests_o
