@@ -1,4 +1,4 @@
 [submodule "tinker8_tinkerbox"]
 	path = tinker8_tinkerbox
-	url = git@github.com:mtzgroup/tinker9_tinkerbox.git
+	url = git@github.com:mtzgroup/tinker8_tinkerbox.git
 	branch = tinkerbox
