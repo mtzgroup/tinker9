@@ -20,7 +20,7 @@ target_link_libraries (tinker9
 )
 
 
-add_library (tinkerbox SHARED src/tinkerbox.cpp)
+add_library (tinkerbox SHARED tinkerbox_interface/tinkerbox.cpp)
 target_link_libraries (tinkerbox
    tinker9_acc
    tinker9_cu

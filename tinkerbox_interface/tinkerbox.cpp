@@ -1,6 +1,8 @@
+#include <stdio.h>
+
 #include "main_tinker9.h"
 
-#include <stdio.h>
+#include "tinkerbox.h"
 
 extern "C" void test_print()
 {
