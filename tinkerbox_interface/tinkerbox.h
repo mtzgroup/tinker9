@@ -16,7 +16,7 @@ extern "C"{
    * @param qm_indices Should have a size of n_qm.
    *                   Important: The indices must be ONE-indexing!
    * @param n_qm Self-explanatory.
-   * @param xyzfile Filename for xyz file.
+   * @param xyzfile Filename for xyz file. The filename should have less than 240 chars.
    **/
   DSOGLOBAL void initialize_tinker(const int32_t* const qm_indices, const int32_t n_qm, const char* const xyzfile);
   

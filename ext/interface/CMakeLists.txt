@@ -510,7 +510,8 @@ add_library (tinkerObjF OBJECT
 ../source/version.f
 ../source/volume.f
 ../source/xyzatm.f
-../source/zatom.f)
+../source/zatom.f
+../source/tinker8_fortran_function_wrapper.f)
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cpp/tinker/routines.h")
     enable_language (CXX)

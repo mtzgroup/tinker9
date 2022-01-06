@@ -1,13 +1,20 @@
 #include <stdio.h>
 
-#include "main_tinker9.h"
+#include "tinker_rt.h" // initial()
 
+#include "tinker8_fortran_function_wrapper.h"
 #include "tinkerbox.h"
 
-extern "C" void test_print()
+void initialize_tinker(const int32_t* const qm_indices, const int32_t n_qm, const char* const xyzfile)
 {
-    printf("Henry: Test test\n");
+    /** Implemented in src/initial.cpp
+     *  This function initialize a bunch of global variables to zero-start.
+     *  It also prints tinker header message (TINKER9_PROMO_STRING).
+     **/
+    tinker::initial();
 
-    using namespace tinker;
-    x_testgrad(0, NULL);
+    const int32_t xyzfile_string_length = strlen(xyzfile);
+    tinkerbox_getxyz_(xyzfile, &xyzfile_string_length);
+
+    printf("Done!\n"); fflush(stdout);
 }
