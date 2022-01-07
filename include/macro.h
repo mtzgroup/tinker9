@@ -36,7 +36,8 @@
 #elif defined(__GNUC__)
 #   define TINKER_GCC
 #   if __GNUC__ <= 4 && __GNUC_MINOR__ <= 8
-#      warning Your default GNU version is 4.8 where C++11 is incomplete.
+// Henry 20220106: Change "warning" to "error". Otherwise it'll print a super missleading warning.
+#      error Your default GNU version is 4.8 where C++11 is incomplete.
 #   endif
 
 #endif
