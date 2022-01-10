@@ -80,6 +80,7 @@ testgrad_x.cpp
 tinker_rt.cpp
 tinker_suppl.cpp
 trimatexp.cpp
+tinker9_c_function_wrapper.cpp
 )
 if (HOST)
    list (APPEND __T9_CPP_SRC
