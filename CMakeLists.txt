@@ -393,8 +393,8 @@ endif ()
 
 # Henry 20220104: for building shared libraries
 string (APPEND CMAKE_Fortran_FLAGS " -fPIC")
-string (APPEND CMAKE_CXX_FLAGS " -fPIC")
-string (APPEND CMAKE_CUDA_FLAGS " --compiler-options -fPIC")
+string (APPEND CMAKE_CXX_FLAGS " -fPIC -D_GLIBCXX_USE_CXX11_ABI=0")
+string (APPEND CMAKE_CUDA_FLAGS " --compiler-options -fPIC -D_GLIBCXX_USE_CXX11_ABI=0")
 
 
 ########################################################################

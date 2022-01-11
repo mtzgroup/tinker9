@@ -1,4 +1,4 @@
-// Compile this file by "g++ ../tinkerbox_interface/test_tinkerbox_interface.cpp libtinkerbox.so -o test_tinkerbox_interface;"
+// Compile this file by "icpc ../tinkerbox_interface/test_tinkerbox_interface.cpp libtinkerbox.so -std=c++11 -o test_tinkerbox_interface;"
 // Run the executable by "LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH ./test_tinkerbox_interface;"
 
 #include "tinkerbox.h"
