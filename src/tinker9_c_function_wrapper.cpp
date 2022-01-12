@@ -4,6 +4,8 @@
 #include "md.h" // mdcalc.h::calc::*, mdegv.h::copy_gradient()
 #include "energy.h" // energy()
 
+#include "nblist.h"
+
 #include "tinker8_fortran_function_wrapper.h"
 #include "tinker9_c_function_wrapper.h"
 
@@ -56,6 +58,29 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
      */
     printf("Henry: TODO: make sure this is compatable with Terachem\n"); fflush(stdout);
     tinker::initialize();
+    
+#if TINKER_CUDART
+    printf("Checking GPU compilation: Tinker9 compiled with CUDA\n");
+    if (tinker::vlist_version() & tinker::NBL_SPATIAL)
+        printf("Checking GPU runtime: vdw_term running with OpenACC\n");
+    else
+        printf("Checking GPU runtime: vdw_term running with OpenACC\n");
+    if (tinker::clist_version() & tinker::NBL_SPATIAL)
+        printf("Checking GPU runtime: charge_term running with OpenACC\n");
+    else
+        printf("Checking GPU runtime: charge_term running with OpenACC\n");
+    if (tinker::mlist_version() & tinker::NBL_SPATIAL)
+        printf("Checking GPU runtime: mpole_term, polar_term, chgtrn_term, repuls_term running with OpenACC\n");
+    else
+        printf("Checking GPU runtime: mpole_term, polar_term, chgtrn_term, repuls_term running with OpenACC\n");
+    if (tinker::ulist_version() & tinker::NBL_SPATIAL)
+        printf("Checking GPU runtime: polar_term running with OpenACC\n");
+    else
+        printf("Checking GPU runtime: polar_term running with OpenACC\n");
+#else
+    printf("Checking GPU compilation: Tinker9 compiled with only OpenACC\n");
+    printf("Checking GPU runtime: All running with OpenACC\n");
+#endif
 }
 
 int32_t internal_get_n_mm()

@@ -56,6 +56,7 @@ void mdsave_dup_then_write(int istep, time_prec dt)
     *
     * Of course this is not a problem if the computer has only one GPU card.
     */
+   printf("TC Anchor: If you happen to run into this piece of code, where cudaSetDevice() is called, something very wrong will soon happen.\n"); fflush(stdout);
    check_rt(cudaSetDevice(idevice));
 #endif
 

@@ -95,8 +95,8 @@ static void get_device_attribute(DeviceAttribute& a, int device = 0)
    else
       a.ecc_string = "off";
 
-
-   check_rt(cudaSetDevice(device));
+   // Henry 20220111: Disable cudaSetDevice() and cudaDeviceReset() later on, otherwise it'll make all the previously allocated memory destroyed.
+   // check_rt(cudaSetDevice(device));
    check_rt(cudaMemGetInfo(&a.free_mem_bytes, &a.total_mem_bytes));
 
 
@@ -159,7 +159,8 @@ static void get_device_attribute(DeviceAttribute& a, int device = 0)
    a.clock_rate_kHz = prop.clockRate;
 
 
-   check_rt(cudaDeviceReset());
+   // Henry 20220111
+   // check_rt(cudaDeviceReset());
 
 
    if (!found_cc) {
@@ -294,7 +295,8 @@ void gpu_card_data(rc_op op)
 
       idevice = recommend_device(ndevice);
 
-      check_rt(cudaSetDevice(idevice));
+   // Henry 20220111: Disable cudaSetDevice() and cudaSetDeviceFlags(), otherwise it'll make all the previously allocated memory destroyed.
+//       check_rt(cudaSetDevice(idevice));
 
       if (cuda_device_flags == 0) {
          cuda_device_flags = cudaDeviceMapHost;
@@ -305,7 +307,8 @@ void gpu_card_data(rc_op op)
          // for cudaStreamSynchronize() calls.
          cuda_device_flags |= cudaDeviceScheduleSpin;
 #endif
-         always_check_rt(cudaSetDeviceFlags(cuda_device_flags));
+         // Henry 20220111
+//          always_check_rt(cudaSetDeviceFlags(cuda_device_flags));
       }
    }
 }
