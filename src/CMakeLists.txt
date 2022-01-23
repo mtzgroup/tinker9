@@ -70,6 +70,7 @@ platform.cpp
 pme.cpp
 pmestuf.cpp
 potent.cpp
+qmmm_global.cpp
 random.cpp
 rattle.cpp
 rc_man.cpp

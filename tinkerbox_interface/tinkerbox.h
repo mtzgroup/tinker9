@@ -1,5 +1,5 @@
-#ifndef TINKERBOX_
-#define TINKERBOX_
+#ifndef TINKERBOX_H_
+#define TINKERBOX_H_
 
 #define DSOGLOBAL __attribute__((visibility("default")))
 

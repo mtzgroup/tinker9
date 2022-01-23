@@ -79,9 +79,12 @@ int main()
     checkCudaErrors(cudaMemcpy(d_A, A, M * K * sizeof(double), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_B, B, K * N * sizeof(double), cudaMemcpyHostToDevice));
 
+    // All the stuff outside this block is to make sure tinker doesn't destroy GPU memory that's already allocated.
     {
-        char* xyz = "~/test/tinker-banchmark/water_bulk.xyz";
-        initialize_tinker(nullptr, 0, xyz);
+        const int32_t n_qm = 4;
+        const int32_t qm_indices[4] { 5, 6, 7, 8 };
+        const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
+        initialize_tinker(qm_indices, n_qm, xyz);
 
         double energy = get_energy_nonpolar_mm_contribution();
         printf("energy = %.10f\n", energy);
@@ -109,7 +112,7 @@ int main()
 
     checkCudaErrors(cudaMemcpy(C, d_C, M * N * sizeof(double), cudaMemcpyDeviceToHost));
 
-    printf("Henry: cuda result = %.2f\n", C[M * N - 1]);
+    printf("Henry: cuda result = %.2f (expected: 2077650.00)\n", C[M * N - 1]);
 
     stat = cublasDestroy_v2(handle);
     CUBLASERR(stat);

@@ -3,6 +3,7 @@
 #include "nblist.h"
 #include "potent.h"
 #include "tinker_rt.h"
+#include "qmmm_global.h"
 #include "tool/host_zero.h"
 #include "tool/io_fort_str.h"
 #include "tool/io_text.h"
@@ -237,6 +238,45 @@ void evdw_data(rc_op op)
             }
          }
       }
+
+      if (QMMMGlobal::n_qm > 0)
+         printf("TC anchor: Removing VDW interaction between QM atoms.\n");
+      // Henry 20220121: i1[x] and n1[x] lists are defined in couple.f
+      //                 i12 and n12 are constructed in connect.f, other i1[x] and n1[x] are constructed in attach.f
+      //                 Here, in addition to the exclusion from neighbors, we set the interaction between QM atoms to be zero.
+      for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+      {
+         int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // From one-indexed to zero-indexed
+
+         for (size_t j_i_qm = 0; j_i_qm < QMMMGlobal::n_qm; j_i_qm++)
+         {
+            int32_t j_qm = QMMMGlobal::qm_indices[j_i_qm] - 1; // From one-indexed to zero-indexed
+
+            if (j_qm > i_qm)
+            {
+               size_t current_exclusion_list_size = excls.size();
+
+               bool if_already_in_exclusion_list = false;
+               for (size_t i_exclusion = 0; i_exclusion < current_exclusion_list_size; i_exclusion++)
+               {
+                  if (exclik[i_exclusion * 2 + 0] == i_qm && exclik[i_exclusion * 2 + 1] == j_qm)
+                  {
+                     excls[i_exclusion] = 0.0;
+                     if_already_in_exclusion_list = true;
+                     break;
+                  }
+               }
+               
+               if (!if_already_in_exclusion_list)
+               {
+                  exclik.push_back(i_qm);
+                  exclik.push_back(j_qm);
+                  excls.push_back(0.0);
+               }
+            }
+         }
+      }
+
       nvexclude = excls.size();
       darray::allocate(nvexclude, &vexclude, &vexclude_scale);
       darray::copyin(g::q0, nvexclude, vexclude, exclik.data());
