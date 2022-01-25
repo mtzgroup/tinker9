@@ -3,6 +3,7 @@
 #include "md.h"
 #include "nblist.h"
 #include "potent.h"
+#include "qmmm_global.h"
 #include "tool/host_zero.h"
 #include "tool/io_fort_str.h"
 #include "tool/io_text.h"
@@ -237,6 +238,26 @@ void echglj_data(rc_op op)
             }
          }
       }
+
+      if (QMMMGlobal::n_qm > 0)
+      {
+         printf("TC anchor: Removing VDW interaction between QM atoms.\n");
+         printf("\n\nWarning!\nWarning!\nWarning!\nHenry 20220123 don't know how to run this part of the code, so this piece of code is not tested!\n\n\n\n");
+      }
+      // Henry 20220121: See comments in src/evdw.cpp. These are the 2 files that set up the exclusion list.
+      for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+      {
+         int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // From one-indexed to zero-indexed
+
+         for (size_t j_i_qm = 0; j_i_qm < QMMMGlobal::n_qm; j_i_qm++)
+         {
+            int32_t j_qm = QMMMGlobal::qm_indices[j_i_qm] - 1; // From one-indexed to zero-indexed
+
+            if (j_qm > i_qm)
+               insert_cv(ik_scale, i_qm, j_qm, 0.0, 'v'); // It handles appending-or-replacing.
+         }
+      }
+
       std::vector<int> ik_vec;
       std::vector<real> scal_vec;
       for (auto& it : ik_scale) {

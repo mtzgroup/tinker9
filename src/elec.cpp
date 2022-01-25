@@ -14,6 +14,7 @@
 #include "pmestuf.h"
 #include "potent.h"
 #include "switch.h"
+#include "qmmm_global.h"
 #include "tool/io_fort_str.h"
 #include <tinker/detail/atoms.hh>
 #include <tinker/detail/charge.hh>
@@ -68,6 +69,15 @@ void pchg_data(rc_op op)
             el = 1;
          pchgbuf[i] *= el;
       }
+
+      if (QMMMGlobal::n_qm > 0)
+         printf("TC anchor: Removing charges of QM atoms.\n");
+      for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+      {
+         int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // One-indexed to zero-indexed
+         pchgbuf[i_qm] = 0.0;
+      }
+
       darray::copyin(g::q0, n, pchg, pchgbuf.data());
       wait_for(g::q0);
    }
@@ -867,6 +877,20 @@ void mpole_init(int vers)
    chkpole();
    rotpole();
 
+   {
+      printf("Henry DeBUG: static dipole after rotpole()\n");
+      double* h_rpole = new double[n * mpl_total];
+      darray::copyout(g::q0, n, h_rpole, rpole);
+      wait_for(g::q0);
+      for (int i_mm = 0; i_mm < n; i_mm++)
+      {
+         printf("Site %d:  ", i_mm);
+         for (int i_coord = 0; i_coord < mpl_total; i_coord++)
+            printf("%.10f  ", h_rpole[i_mm * mpl_total + i_coord]);
+         printf("\n");
+      }
+      fflush(stdout);
+   }
 
    if (use_ewald()) {
       rpole_to_cmp();
