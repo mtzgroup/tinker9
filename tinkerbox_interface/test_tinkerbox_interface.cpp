@@ -81,19 +81,70 @@ int main()
 
     // All the stuff outside this block is to make sure tinker doesn't destroy GPU memory that's already allocated.
     {
-        const int32_t n_qm = 4;
+        const int32_t n_qm = 2;
         const int32_t qm_indices[4] { 5, 6, 7, 8 };
         const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
         initialize_tinker(qm_indices, n_qm, xyz);
+        const int32_t n_mm = get_n_mm();
+        const int32_t n_total = n_mm + n_qm;
+
+        {
+            int32_t* qm_atom_type = new int32_t[n_qm];
+            get_qm_atomic_indices(qm_atom_type);
+            for (int i_qm = 0; i_qm < n_qm; i_qm++)
+                printf("QM atom %d, atomic type = %d\n", i_qm, qm_atom_type[i_qm]);
+            delete[] qm_atom_type;
+        }
+        
+        {
+            double* qm_mass = new double[n_qm];
+            get_qm_mass(qm_mass);
+            for (int i_qm = 0; i_qm < n_qm; i_qm++)
+                printf("QM atom %d, mass = %.5f\n", i_qm, qm_mass[i_qm]);
+            delete[] qm_mass;
+        }
+        
+        {
+            double* mm_mass = new double[n_mm];
+            get_mm_mass(mm_mass);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, mass = %.5f\n", i_mm, mm_mass[i_mm]);
+            delete[] mm_mass;
+        }
+        
+        {
+            double* qm_coords = new double[n_qm * 3];
+            get_qm_xyz(qm_coords);
+            for (int i_qm = 0; i_qm < n_qm; i_qm++)
+                printf("QM atom %d, coords = (%.10f, %.10f, %.10f)\n", i_qm, qm_coords[i_qm * 3 + 0], qm_coords[i_qm * 3 + 1], qm_coords[i_qm * 3 + 2]);
+            delete[] qm_coords;
+        }
+        
+        {
+            double* mm_coords = new double[n_mm * 3];
+            get_mm_xyz(mm_coords);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, coords = (%.10f, %.10f, %.10f)\n", i_mm, mm_coords[i_mm * 3 + 0], mm_coords[i_mm * 3 + 1], mm_coords[i_mm * 3 + 2]);
+            delete[] mm_coords;
+        }
+
+        {
+            double* charges = new double[n_mm];
+            get_mm_charge(charges);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, charge = %.10f\n", i_mm, charges[i_mm]);
+            delete[] charges;
+        }
+
+
 
         double energy = get_energy_nonpolar_mm_contribution();
         printf("energy = %.10f\n", energy);
 
-        int n = get_n_mm();
-        double* gradient = new double[n * 3];
+        double* gradient = new double[n_total * 3];
         get_gradients_all_atoms_mm_contribution(gradient);
 
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < n_total; i++)
             printf("Atom %d gradient %.10f, %.10f, %.10f \n", i, gradient[i*3+0], gradient[i*3+1], gradient[i*3+2]);
         delete[] gradient;
     }

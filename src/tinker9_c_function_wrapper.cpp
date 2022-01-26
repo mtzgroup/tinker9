@@ -9,13 +9,21 @@
 #include "energy.h" // energy()
 #include "potent.h" // use_potent(), *_term
 #include "nblist.h"
+#include "tool/darray.h"
 
+#include <tinker/detail/atoms.hh>
+#include <tinker/detail/atomid.hh>
 #include <tinker/detail/bndstr.hh>
 #include <tinker/detail/angbnd.hh>
 #include <tinker/detail/urey.hh>
 #include <tinker/detail/tors.hh>
 #include <tinker/detail/mpole.hh>
 #include <tinker/detail/polar.hh>
+#include <tinker/detail/units.hh>
+
+#define DIE(...) { printf(__VA_ARGS__); \
+    printf("DIE called at line number %d in file %s\n", __LINE__, __FILE__); \
+    exit(1); }
 
 template <class T>
 static bool if_in_list(const T* const list, const size_t list_length, const T& item)
@@ -181,7 +189,17 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
     QMMMGlobal::n_qm = n_qm;
     QMMMGlobal::qm_indices = new int32_t[n_qm];
     memcpy(QMMMGlobal::qm_indices, qm_indices, n_qm * sizeof(int32_t));
-    
+
+    // tinker::n is defined in include/mdpq.h, set in src/rc_man.cpp::initialize() -> src/mdpq.cpp::n_data(), and it's NOT set already.
+    QMMMGlobal::n_mm = tinker::atoms::n - n_qm;
+    QMMMGlobal::mm_indices = new int32_t[QMMMGlobal::n_mm];
+    for (int32_t i_total = 1, i_mm = 0; i_total <= tinker::atoms::n; i_total++)
+        if (!if_in_list<int32_t>(qm_indices, n_qm, i_total))
+        {
+            QMMMGlobal::mm_indices[i_mm] = i_total;
+            i_mm++;
+        }
+
     /**
      * Copied from src/testgrad_x.cpp::x_testgrad()
      * rc_flag defined in include/mdpq.h, calc namespace defined in include/mdcalc.h
@@ -226,19 +244,154 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
     printf("\n\n");
 }
 
+int32_t internal_get_n_qm()
+{
+    return QMMMGlobal::n_qm;
+}
+
 int32_t internal_get_n_mm()
 {
-    return tinker::n;
+    return QMMMGlobal::n_mm;
 }
+
+void internal_get_qm_atomic_indices(int* qm_atomic_numbers)
+{
+    for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+    {
+        int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // One-index to zero-index
+        qm_atomic_numbers[i_i_qm] = tinker::atomid::atomic[i_qm];
+    }
+}
+
+void internal_get_qm_mass(double* qm_masses)
+{
+    for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+    {
+        int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // One-index to zero-index
+        qm_masses[i_i_qm] = tinker::atomid::mass[i_qm];
+    }
+}
+
+void internal_get_mm_mass(double* mm_masses)
+{
+    for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+    {
+        int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+        mm_masses[i_i_mm] = tinker::atomid::mass[i_mm];
+    }
+}
+
+void internal_get_qm_xyz(double* qm_coords)
+{
+    const size_t n_total = tinker::n;
+    double* all_coords = new double[n_total * 3];
+    // tinker::x is defined in include/mdpq.h, set in src/mdpq.cpp::xyz_data().
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 0, tinker::x);
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 1, tinker::y);
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 2, tinker::z);
+    tinker::wait_for(tinker::g::q0);
+
+    for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
+    {
+        int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // One-index to zero-index
+        for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+            qm_coords[i_i_qm * 3 + i_xyz] = all_coords[i_xyz * n_total + i_qm] / tinker::units::bohr;
+    }
+
+    delete[] all_coords;
+}
+
+void internal_set_qm_xyz(const double* const qm_coords)
+{
+    // TODO
+    DIE("set_qm_xyz() not implemented!\n")
+}
+
+void internal_get_mm_xyz(double* mm_coords)
+{
+    const size_t n_total = tinker::n;
+    double* all_coords = new double[n_total * 3];
+    // tinker::x is defined in include/mdpq.h, set in src/mdpq.cpp::xyz_data().
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 0, tinker::x);
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 1, tinker::y);
+    tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 2, tinker::z);
+    tinker::wait_for(tinker::g::q0);
+
+    for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+    {
+        int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+        for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+            mm_coords[i_i_mm * 3 + i_xyz] = all_coords[i_xyz * n_total + i_mm] / tinker::units::bohr;
+    }
+
+    delete[] all_coords;
+}
+
+void internal_set_mm_xyz(const double* const mm_coords)
+{
+    // TODO
+    DIE("set_mm_xyz() not implemented!\n")
+}
+
+void internal_get_mm_charge(double* charges)
+{
+    int n_charge_source = 0;
+
+    if (tinker::use_potent(tinker::charge_term))
+    {
+        const size_t n_total = tinker::n;
+        double* all_charges = new double[n_total];
+        // tinker::pchg is defined in include/mod.charge.h, set in src/elec.cpp::pchg_data().
+        tinker::darray::copyout(tinker::g::q0, n_total, all_charges, tinker::pchg);
+        tinker::wait_for(tinker::g::q0);
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            charges[i_i_mm] = all_charges[i_mm];
+        }
+
+        delete[] all_charges;
+        n_charge_source++;
+    }
+
+    if (tinker::use_potent(tinker::mpole_term))
+    {
+        const size_t n_total = tinker::n;
+        double* all_multipole = new double[n_total * tinker::mpl_total];
+        // tinker::pole and tinker::rpole are defined in include/mod.mpole.h.
+        // tinker::pole is set in src/elec.cpp::pole_data(), and tinker::rpole is computed in src/elec.cpp::mpole_init() -> src/acc/rotpole.cpp::rotpole()
+        tinker::darray::copyout(tinker::g::q0, n_total, all_multipole, tinker::pole);
+        tinker::wait_for(tinker::g::q0);
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            charges[i_i_mm] = all_multipole[i_mm * tinker::mpl_total + 0];
+        }
+
+        delete[] all_multipole;
+        n_charge_source++;
+    }
+
+    if (n_charge_source == 0)
+        DIE("Neither charge nor multipole is specified in Tinker parameter!\n")
+    else if (n_charge_source > 1)
+        DIE("Both charge and multipole (used automatically with polarize) is specified in Tinker parameter, which will cause inconsistency!\n")
+}
+
+
 
 double internal_get_energy_nonpolar_mm_contribution()
 {
+    // TODO: temporary!
     tinker::energy(tinker::rc_flag);
     return tinker::esum;
 }
 
 void internal_get_gradients_all_atoms_mm_contribution(double* grad)
 {
+    // TODO: temporary!
     std::vector<double> gdx(tinker::n), gdy(tinker::n), gdz(tinker::n);
     tinker::copy_gradient(tinker::calc::grad, gdx.data(), gdy.data(), gdz.data());
 
