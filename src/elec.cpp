@@ -877,20 +877,6 @@ void mpole_init(int vers)
    chkpole();
    rotpole();
 
-   {
-      printf("Henry DeBUG: static dipole after rotpole()\n");
-      double* h_rpole = new double[n * mpl_total];
-      darray::copyout(g::q0, n, h_rpole, rpole);
-      wait_for(g::q0);
-      for (int i_mm = 0; i_mm < n; i_mm++)
-      {
-         printf("Site %d:  ", i_mm);
-         for (int i_coord = 0; i_coord < mpl_total; i_coord++)
-            printf("%.10f  ", h_rpole[i_mm * mpl_total + i_coord]);
-         printf("\n");
-      }
-      fflush(stdout);
-   }
 
    if (use_ewald()) {
       rpole_to_cmp();

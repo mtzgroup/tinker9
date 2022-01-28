@@ -58,7 +58,15 @@ void get_mm_charge(double* charges)
     internal_get_mm_charge(charges);
 }
 
+int32_t get_mm_static_point_dipole(double* dipoles)
+{
+    return internal_get_mm_static_point_dipole(dipoles);
+}
 
+void get_mm_polarizibility(double* polarizabilities)
+{
+    internal_get_mm_polarizibility(polarizabilities);
+}
 
 double get_energy_nonpolar_mm_contribution()
 {
@@ -68,4 +76,34 @@ double get_energy_nonpolar_mm_contribution()
 void get_gradients_all_atoms_mm_contribution(double* grad)
 {
     internal_get_gradients_all_atoms_mm_contribution(grad);
+}
+
+void get_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
+{
+    internal_get_gradient_from_static_dipole_rotation(mm_torque, mm_grad);
+}
+
+void get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm)
+{
+    internal_get_electric_field_mm_contribution(electric_field_direct_mm, electric_field_polarization_mm);
+}
+
+void evaluate_induced_dipole_from_total_electric_field(
+        const double* const electric_field_direct_mm, 
+        const double* const electric_field_polarization_mm,
+        double* induced_dipole_direct, 
+        double* induced_dipole_polarization
+    )
+{
+    internal_evaluate_induced_dipole_from_total_electric_field(
+        electric_field_direct_mm,
+        electric_field_polarization_mm,
+        induced_dipole_direct,
+        induced_dipole_polarization
+    );
+}
+
+void get_mm_induced_dipole(double* mu_d, double* mu_p)
+{
+    internal_get_mm_induced_dipole(mu_d, mu_p);
 }

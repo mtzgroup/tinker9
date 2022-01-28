@@ -149,7 +149,7 @@ extern "C"{
    * @param electric_field_direct_mm Should have (n_mm * 3) space allocated beforehand.
    * @param electric_field_polarization_mm Should have (n_mm * 3) space allocated beforehand.
    **/
-  void get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm);
+  DSOGLOBAL void get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm);
 
   /**
    * \brief Get the induced dipole based on the electric field at each MM position.
@@ -163,10 +163,10 @@ extern "C"{
    * @param induced_dipole_direct Should have (n_mm * 3) space allocated beforehand.
    * @param induced_dipole_polarization Should have (n_mm * 3) space allocated beforehand.
    **/
-  void evaluate_induced_dipole_from_total_electric_field(
-    const double* const electric_field_direct_mm, 
+  DSOGLOBAL void evaluate_induced_dipole_from_total_electric_field(
+    const double* const electric_field_direct_mm,
     const double* const electric_field_polarization_mm,
-    double* induced_dipole_direct, 
+    double* induced_dipole_direct,
     double* induced_dipole_polarization
   );
 

@@ -81,8 +81,8 @@ int main()
 
     // All the stuff outside this block is to make sure tinker doesn't destroy GPU memory that's already allocated.
     {
-        const int32_t n_qm = 2;
-        const int32_t qm_indices[4] { 5, 6, 7, 8 };
+        const int32_t n_qm = 4;
+        const int32_t qm_indices[6] { 5, 6, 7, 8 };
         const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
         initialize_tinker(qm_indices, n_qm, xyz);
         const int32_t n_mm = get_n_mm();
@@ -136,10 +136,52 @@ int main()
             delete[] charges;
         }
 
+        {
+            double* dipoles = new double[n_mm * 3];
+            get_mm_static_point_dipole(dipoles);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, dipole = (%.10f, %.10f, %.10f)\n", i_mm, dipoles[i_mm * 3 + 0], dipoles[i_mm * 3 + 1], dipoles[i_mm * 3 + 2]);
+            delete[] dipoles;
+        }
+
+        {
+            double* polarizabilities = new double[n_mm];
+            get_mm_polarizibility(polarizabilities);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, polarizability = %.10f\n", i_mm, polarizabilities[i_mm]);
+            delete[] polarizabilities;
+        }
 
 
         double energy = get_energy_nonpolar_mm_contribution();
         printf("energy = %.10f\n", energy);
+
+        {
+            const double new_xyz[12] = {
+                0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 3.0, 0.0,
+                1.0, 3.0, 0.0,
+            };
+            set_mm_xyz(new_xyz);
+
+            energy = get_energy_nonpolar_mm_contribution();
+            printf("new energy = %.10f\n", energy);
+        }
+
+        {
+            double* Ed = new double[n_mm * 3];
+            double* Ep = new double[n_mm * 3];
+            get_electric_field_mm_contribution(Ed, Ep);
+            printf("Direct field:\n");
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, Ed = (%.10f, %.10f, %.10f)\n", i_mm, Ed[i_mm * 3 + 0], Ed[i_mm * 3 + 1], Ed[i_mm * 3 + 2]);
+            printf("Polarization field:\n");
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, Ep = (%.10f, %.10f, %.10f)\n", i_mm, Ep[i_mm * 3 + 0], Ep[i_mm * 3 + 1], Ep[i_mm * 3 + 2]);
+            delete[] Ed;
+            delete[] Ep;
+        }
 
         double* gradient = new double[n_total * 3];
         get_gradients_all_atoms_mm_contribution(gradient);
@@ -163,7 +205,7 @@ int main()
 
     checkCudaErrors(cudaMemcpy(C, d_C, M * N * sizeof(double), cudaMemcpyDeviceToHost));
 
-    printf("Henry: cuda result = %.2f (expected: 2077650.00)\n", C[M * N - 1]);
+    printf("\n\nUnrelated cuda result = %.2f (expected: 2077650.00)\n", C[M * N - 1]);
 
     stat = cublasDestroy_v2(handle);
     CUBLASERR(stat);
