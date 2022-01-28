@@ -7,6 +7,7 @@
 #include "mathfunc_lu.h"
 #include "md.h"
 #include "mod.uprior.h"
+#include "qmmm_global.h"
 #include "seq_damp.h"
 #include "tool/error.h"
 #include "tool/gpu_card.h"
@@ -232,7 +233,13 @@ void induce_mutual_pcg1_acc(real (*uind)[3], real (*uinp)[3])
    }
 
    // get the electrostatic field due to permanent multipoles
-   dfield(field, fieldp);
+   if (QMMMGlobal::n_qm > 0)
+   {
+      darray::copy(g::q0, n, field, QMMMGlobal::d_qmmm_electric_field_d);
+      darray::copy(g::q0, n, fieldp, QMMMGlobal::d_qmmm_electric_field_p);
+   }
+   else
+      dfield(field, fieldp);
    // direct induced dipoles
    #pragma acc parallel loop independent async\
                deviceptr(polarity,udir,udirp,field,fieldp)

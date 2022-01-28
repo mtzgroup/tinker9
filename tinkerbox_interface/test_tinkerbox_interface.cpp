@@ -82,7 +82,7 @@ int main()
     // All the stuff outside this block is to make sure tinker doesn't destroy GPU memory that's already allocated.
     {
         const int32_t n_qm = 4;
-        const int32_t qm_indices[6] { 5, 6, 7, 8 };
+        const int32_t qm_indices[8] { 5, 6, 7, 8, 1, 2 };
         const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
         initialize_tinker(qm_indices, n_qm, xyz);
         const int32_t n_mm = get_n_mm();
@@ -152,22 +152,28 @@ int main()
             delete[] polarizabilities;
         }
 
-
-        double energy = get_energy_nonpolar_mm_contribution();
-        printf("energy = %.10f\n", energy);
-
         {
-            const double new_xyz[12] = {
-                0.0, 0.0, 0.0,
-                1.0, 0.0, 0.0,
-                0.0, 3.0, 0.0,
-                1.0, 3.0, 0.0,
-            };
-            set_mm_xyz(new_xyz);
+            double energy = get_energy_nonpolar_mm_contribution();
+            printf("energy = %.10f\n", energy);
+        }   
 
-            energy = get_energy_nonpolar_mm_contribution();
-            printf("new energy = %.10f\n", energy);
-        }
+        // {
+        //     double new_xyz[12] = {
+        //         0.0, 0.0, 0.0,
+        //         1.0, 0.0, 0.0,
+        //         0.0, 3.0, 0.0,
+        //         1.0, 3.0, 0.0,
+        //     }; // Angstrom
+
+        //     const double angstrom_to_bohr = 1.0 / 0.52917721067;
+        //     for (int i = 0; i < n_mm * 3; i++)
+        //         new_xyz[i] *= angstrom_to_bohr;
+
+        //     set_mm_xyz(new_xyz);
+
+        //     double energy = get_energy_nonpolar_mm_contribution();
+        //     printf("new energy = %.10f\n", energy);
+        // }
 
         {
             double* Ed = new double[n_mm * 3];
@@ -183,12 +189,62 @@ int main()
             delete[] Ep;
         }
 
-        double* gradient = new double[n_total * 3];
-        get_gradients_all_atoms_mm_contribution(gradient);
+        // {
+        //     double* Ed = new double[n_mm * 3] {
+        //         1.0, 0.0, 0.0,
+        //         0.5, 0.0, 0.0,
+        //     };
+        //     double* Ep = new double[n_mm * 3] {
+        //         0.0, 0.0, 0.0,
+        //         0.1, 0.0, 0.0,
+        //     };
+        //     double* mu_d = new double[n_mm * 3];
+        //     double* mu_p = new double[n_mm * 3];
 
-        for (int i = 0; i < n_total; i++)
-            printf("Atom %d gradient %.10f, %.10f, %.10f \n", i, gradient[i*3+0], gradient[i*3+1], gradient[i*3+2]);
-        delete[] gradient;
+        //     printf("Applying direct field:\n");
+        //     for (int i_mm = 0; i_mm < n_mm; i_mm++)
+        //         printf("MM atom %d, Ed = (%.10f, %.10f, %.10f)\n", i_mm, Ed[i_mm * 3 + 0], Ed[i_mm * 3 + 1], Ed[i_mm * 3 + 2]);
+        //     printf("Applying polarization field:\n");
+        //     for (int i_mm = 0; i_mm < n_mm; i_mm++)
+        //         printf("MM atom %d, Ep = (%.10f, %.10f, %.10f)\n", i_mm, Ep[i_mm * 3 + 0], Ep[i_mm * 3 + 1], Ep[i_mm * 3 + 2]);
+
+        //     evaluate_induced_dipole_from_total_electric_field(Ed, Ep, mu_d, mu_p);
+
+        //     printf("Obtained direct dipole:\n");
+        //     for (int i_mm = 0; i_mm < n_mm; i_mm++)
+        //         printf("MM atom %d, mu_d = (%.10f, %.10f, %.10f)\n", i_mm, mu_d[i_mm * 3 + 0], mu_d[i_mm * 3 + 1], mu_d[i_mm * 3 + 2]);
+        //     printf("Obtained polarization dipole:\n");
+        //     for (int i_mm = 0; i_mm < n_mm; i_mm++)
+        //         printf("MM atom %d, mu_p = (%.10f, %.10f, %.10f)\n", i_mm, mu_p[i_mm * 3 + 0], mu_p[i_mm * 3 + 1], mu_p[i_mm * 3 + 2]);
+                
+        //     delete[] Ed;
+        //     delete[] Ep;
+        //     delete[] mu_d;
+        //     delete[] mu_p;
+        // }
+
+        {
+            double* gradient = new double[n_total * 3];
+            get_gradients_all_atoms_mm_contribution(gradient);
+
+            for (int i = 0; i < n_total; i++)
+                printf("Atom %d gradient %.10f, %.10f, %.10f \n", i, gradient[i*3+0], gradient[i*3+1], gradient[i*3+2]);
+            delete[] gradient;
+        }
+
+        {
+            double* mu_d = new double[n_mm * 3];
+            double* mu_p = new double[n_mm * 3];
+            get_mm_induced_dipole(mu_d, mu_p);
+            printf("Direct dipole:\n");
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, mu_d = (%.10f, %.10f, %.10f)\n", i_mm, mu_d[i_mm * 3 + 0], mu_d[i_mm * 3 + 1], mu_d[i_mm * 3 + 2]);
+            printf("Polarization dipole:\n");
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, mu_p = (%.10f, %.10f, %.10f)\n", i_mm, mu_p[i_mm * 3 + 0], mu_p[i_mm * 3 + 1], mu_p[i_mm * 3 + 2]);
+            delete[] mu_d;
+            delete[] mu_p;
+        }
     }
 
     cublasHandle_t handle;

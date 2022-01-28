@@ -217,6 +217,16 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
      * then allocate GPU memory in subsequent rc_man constructor calls.
      */
     tinker::initialize();
+
+    /**
+     * Allocate helper arrays for QMMM induced dipole SCF.
+     * TODO: not deallocated
+     */
+    if (tinker::use_potent(tinker::polar_term))
+    {
+        tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_electric_field_d);
+        tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_electric_field_p);
+    }
     
     /**
      * Print the GPU environment. It seems to use OpenACC as default setting.
@@ -286,7 +296,7 @@ void internal_get_mm_mass(double* mm_masses)
 void internal_get_qm_xyz(double* qm_coords)
 {
     const size_t n_total = tinker::n;
-    double* all_coords = new double[n_total * 3];
+    tinker::real* all_coords = new tinker::real[n_total * 3];
     // tinker::x is defined in include/mdpq.h, set in src/mdpq.cpp::xyz_data().
     tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 0, tinker::x);
     tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 1, tinker::y);
@@ -311,10 +321,10 @@ void internal_set_qm_xyz(const double* const qm_coords)
     for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
     {
         int32_t i_qm = QMMMGlobal::qm_indices[i_i_qm] - 1; // One-index to zero-index
-        
-        tinker::atoms::x[i_qm] = qm_coords[i_i_qm * 3 + 0]; // TODO: unit
-        tinker::atoms::y[i_qm] = qm_coords[i_i_qm * 3 + 1]; // TODO: unit
-        tinker::atoms::z[i_qm] = qm_coords[i_i_qm * 3 + 2]; // TODO: unit
+
+        tinker::atoms::x[i_qm] = qm_coords[i_i_qm * 3 + 0] * tinker::units::bohr;
+        tinker::atoms::y[i_qm] = qm_coords[i_i_qm * 3 + 1] * tinker::units::bohr;
+        tinker::atoms::z[i_qm] = qm_coords[i_i_qm * 3 + 2] * tinker::units::bohr;
     }
 
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::xpos, tinker::atoms::x);
@@ -326,7 +336,7 @@ void internal_set_qm_xyz(const double* const qm_coords)
 void internal_get_mm_xyz(double* mm_coords)
 {
     const size_t n_total = tinker::n;
-    double* all_coords = new double[n_total * 3];
+    tinker::real* all_coords = new tinker::real[n_total * 3];
     // tinker::x is defined in include/mdpq.h, set in src/mdpq.cpp::xyz_data().
     tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 0, tinker::x);
     tinker::darray::copyout(tinker::g::q0, n_total, all_coords + n_total * 1, tinker::y);
@@ -352,9 +362,9 @@ void internal_set_mm_xyz(const double* const mm_coords)
     {
         int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
         
-        tinker::atoms::x[i_mm] = mm_coords[i_i_mm * 3 + 0]; // TODO: unit
-        tinker::atoms::y[i_mm] = mm_coords[i_i_mm * 3 + 1]; // TODO: unit
-        tinker::atoms::z[i_mm] = mm_coords[i_i_mm * 3 + 2]; // TODO: unit
+        tinker::atoms::x[i_mm] = mm_coords[i_i_mm * 3 + 0] * tinker::units::bohr;
+        tinker::atoms::y[i_mm] = mm_coords[i_i_mm * 3 + 1] * tinker::units::bohr;
+        tinker::atoms::z[i_mm] = mm_coords[i_i_mm * 3 + 2] * tinker::units::bohr;
     }
 
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::xpos, tinker::atoms::x);
@@ -370,7 +380,7 @@ void internal_get_mm_charge(double* charges)
     if (tinker::use_potent(tinker::charge_term))
     {
         const size_t n_total = tinker::n;
-        double* all_charges = new double[n_total];
+        tinker::real* all_charges = new tinker::real[n_total];
         // tinker::pchg is defined in include/mod.charge.h, set in src/elec.cpp::pchg_data().
         tinker::darray::copyout(tinker::g::q0, n_total, all_charges, tinker::pchg);
         tinker::wait_for(tinker::g::q0);
@@ -388,7 +398,7 @@ void internal_get_mm_charge(double* charges)
     if (tinker::use_potent(tinker::mpole_term))
     {
         const size_t n_total = tinker::n;
-        double* all_multipole = new double[n_total * tinker::mpl_total];
+        tinker::real* all_multipole = new tinker::real[n_total * tinker::mpl_total];
         // tinker::pole and tinker::rpole are defined in include/mod.mpole.h.
         // tinker::pole is set in src/elec.cpp::pole_data(), and tinker::rpole is computed in src/elec.cpp::mpole_init() -> src/acc/rotpole.cpp::rotpole()
         tinker::darray::copyout(tinker::g::q0, n_total, all_multipole, tinker::pole);
@@ -421,7 +431,7 @@ int32_t internal_get_mm_static_point_dipole(double* dipoles)
     if (tinker::use_potent(tinker::mpole_term))
     {
         const size_t n_total = tinker::n;
-        double* all_multipole = new double[n_total * tinker::mpl_total];
+        tinker::real* all_multipole = new tinker::real[n_total * tinker::mpl_total];
         tinker::darray::copyout(tinker::g::q0, n_total, all_multipole, tinker::rpole);
         tinker::wait_for(tinker::g::q0);
 
@@ -448,7 +458,7 @@ void internal_get_mm_polarizibility(double* polarizabilities)
     if (tinker::use_potent(tinker::polar_term))
     {
         const size_t n_total = tinker::n;
-        double* all_polarizabilities = new double[n_total];
+        tinker::real* all_polarizabilities = new tinker::real[n_total];
         // tinker::polarity is defined in include/mod.polar.h, set in src/epolar.cpp::epolar_data().
         tinker::darray::copyout(tinker::g::q0, n_total, all_polarizabilities, tinker::polarity);
         tinker::wait_for(tinker::g::q0);
@@ -504,22 +514,20 @@ void internal_get_electric_field_mm_contribution(double* electric_field_direct_m
 {
     if (tinker::use_potent(tinker::polar_term))
     {
-        // tinker::work[xx]_ is defined in include/mod.polar.h, allocated in src/epolar.cpp::epolar_data().
-        // tinker::work01_ and tinker::work02_ are used in src/acc/induce.cpp::induce_mutual_pcg1_acc() as fields for Ed and Ep, so I'm following the same way.
-        auto* Ed = tinker::work01_;
-        auto* Ep = tinker::work02_;
+        auto* Ed = QMMMGlobal::d_qmmm_electric_field_d;
+        auto* Ep = QMMMGlobal::d_qmmm_electric_field_p;
 
         tinker::dfield(Ed, Ep);
         
         const size_t n_total = tinker::n;
-        double* all_Ed = new double[n_total * 3];
-        double* all_Ep = new double[n_total * 3];
+        tinker::real* all_Ed = new tinker::real[n_total * 3];
+        tinker::real* all_Ep = new tinker::real[n_total * 3];
 
         tinker::darray::copyout(tinker::g::q0, n_total, all_Ed, Ed);
         tinker::darray::copyout(tinker::g::q0, n_total, all_Ep, Ep);
         tinker::wait_for(tinker::g::q0);
 
-        const double bohr_to_angstrom_square = 1.0 * tinker::units::bohr * tinker::units::bohr;
+        const double bohr_to_angstrom_square = tinker::units::bohr * tinker::units::bohr;
 
         for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
         {
@@ -551,12 +559,92 @@ void internal_evaluate_induced_dipole_from_total_electric_field(
         double* induced_dipole_polarization
     )
 {
-    // TODO
-    DIE("evaluate_induced_dipole_from_total_electric_field() not implemented!\n")
+    if (tinker::use_potent(tinker::polar_term))
+    {
+        const size_t n_total = tinker::n;
+        tinker::real* workspace_n_mm_times_6 = new tinker::real[n_total * 3 * 2];
+
+        tinker::real* all_Ed = workspace_n_mm_times_6;
+        tinker::real* all_Ep = workspace_n_mm_times_6 + n_total * 3;
+        // Zero field for QM atoms
+        memset(all_Ed, 0, n_total * 3 * sizeof(tinker::real));
+        memset(all_Ep, 0, n_total * 3 * sizeof(tinker::real));
+
+        const double angstrom_to_bohr_square = 1.0 / tinker::units::bohr / tinker::units::bohr;
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+            {
+                all_Ed[i_mm * 3 + i_xyz] = electric_field_direct_mm[i_i_mm * 3 + i_xyz] * angstrom_to_bohr_square;
+                all_Ep[i_mm * 3 + i_xyz] = electric_field_polarization_mm[i_i_mm * 3 + i_xyz] * angstrom_to_bohr_square;
+            }
+        }
+
+        tinker::darray::copyin(tinker::g::q0, n_total, QMMMGlobal::d_qmmm_electric_field_d, all_Ed);
+        tinker::darray::copyin(tinker::g::q0, n_total, QMMMGlobal::d_qmmm_electric_field_p, all_Ep);
+        tinker::wait_for(tinker::g::q0);
+
+        // Actual induce() function call
+        tinker::induce_mutual_pcg1(tinker::uind, tinker::uinp);
+
+        tinker::real* all_mu_d = workspace_n_mm_times_6;
+        tinker::real* all_mu_p = workspace_n_mm_times_6 + n_total * 3;
+
+        tinker::darray::copyout(tinker::g::q0, n_total, all_mu_d, tinker::uind);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_mu_p, tinker::uinp);
+        tinker::wait_for(tinker::g::q0);
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+            {
+                induced_dipole_direct[i_i_mm * 3 + i_xyz] = all_mu_d[i_mm * 3 + i_xyz] / tinker::units::bohr;
+                induced_dipole_polarization[i_i_mm * 3 + i_xyz] = all_mu_p[i_mm * 3 + i_xyz] / tinker::units::bohr;
+            }
+        }
+
+        delete[] workspace_n_mm_times_6;
+    }
+    else
+    {
+        printf("TC anchor: Warning: the induced dipole is computed, but polar is not specified in Tinker parameter.\n");
+        memset(induced_dipole_direct, 0, QMMMGlobal::n_mm * 3 * sizeof(double));
+        memset(induced_dipole_direct, 0, QMMMGlobal::n_mm * 3 * sizeof(double));
+    }
 }
 
 void internal_get_mm_induced_dipole(double* mu_d, double* mu_p)
 {
-    // TODO
-    DIE("get_mm_induced_dipole() not implemented!\n")
+    if (tinker::use_potent(tinker::polar_term))
+    {
+        const size_t n_total = tinker::n;
+        tinker::real* all_mu_d = new tinker::real[n_total * 3];
+        tinker::real* all_mu_p = new tinker::real[n_total * 3];
+        // tinker::uin[d/p] is defined in include/mod.polar.h, allocated in src/elec.cpp::pole_data(), computed in src/acc/induce.cpp::induce_mutual_pcg1_acc().
+        tinker::darray::copyout(tinker::g::q0, n_total, all_mu_d, tinker::uind);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_mu_p, tinker::uinp);
+        tinker::wait_for(tinker::g::q0);
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+            {
+                mu_d[i_i_mm * 3 + i_xyz] = all_mu_d[i_mm * 3 + i_xyz] / tinker::units::bohr;
+                mu_p[i_i_mm * 3 + i_xyz] = all_mu_p[i_mm * 3 + i_xyz] / tinker::units::bohr;
+            }
+        }
+
+        delete[] all_mu_d;
+        delete[] all_mu_p;
+    }
+    else
+    {
+        printf("TC anchor: Warning: the induced dipole is accessed, but polar is not specified in Tinker parameter.\n");
+        memset(mu_d, 0, QMMMGlobal::n_mm * 3 * sizeof(double));
+        memset(mu_p, 0, QMMMGlobal::n_mm * 3 * sizeof(double));
+    }
 }

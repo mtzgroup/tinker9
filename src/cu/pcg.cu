@@ -4,6 +4,7 @@
 #include "launch.h"
 #include "md.h"
 #include "mod.uprior.h"
+#include "qmmm_global.h"
 #include "tool/cudalib.h"
 #include "tool/io_print.h"
 #include <tinker/detail/inform.hh>
@@ -182,7 +183,13 @@ void induce_mutual_pcg1_cu(real (*uind)[3], real (*uinp)[3])
 
 
    // get the electrostatic field due to permanent multipoles
-   dfield(field, fieldp);
+   if (QMMMGlobal::n_qm > 0)
+   {
+      darray::copy(g::q0, n, field, QMMMGlobal::d_qmmm_electric_field_d);
+      darray::copy(g::q0, n, fieldp, QMMMGlobal::d_qmmm_electric_field_p);
+   }
+   else
+      dfield(field, fieldp);
    // direct induced dipoles
    launch_k1s(g::s0, n, pcg_udir, n, polarity, udir, udirp, field, fieldp);
 
