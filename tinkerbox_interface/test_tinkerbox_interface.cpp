@@ -82,7 +82,7 @@ int main()
     // All the stuff outside this block is to make sure tinker doesn't destroy GPU memory that's already allocated.
     {
         const int32_t n_qm = 4;
-        const int32_t qm_indices[8] { 5, 6, 7, 8, 1, 2 };
+        const int32_t qm_indices[8] { 5, 6, 7, 8, 1, 2, 3, 4 };
         const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
         initialize_tinker(qm_indices, n_qm, xyz);
         const int32_t n_mm = get_n_mm();
@@ -228,8 +228,30 @@ int main()
             get_gradients_all_atoms_mm_contribution(gradient);
 
             for (int i = 0; i < n_total; i++)
-                printf("Atom %d gradient %.10f, %.10f, %.10f \n", i, gradient[i*3+0], gradient[i*3+1], gradient[i*3+2]);
+                printf("Atom %d gradient %.10f, %.10f, %.10f\n", i, gradient[i*3+0], gradient[i*3+1], gradient[i*3+2]);
             delete[] gradient;
+        }
+
+        {
+            const double* torque = new double[n_mm * 3] {
+                1.0, 0.0, 0.0,
+                1.0, 1.0, 1.0,
+                0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0,
+            };
+            double* additional_gradient = new double[n_mm * 3] {
+                100.0, 200.0, 300.0,
+                100.0, 200.0, 300.0,
+                100.0, 200.0, 300.0,
+                100.0, 200.0, 300.0,
+            };
+
+            append_gradient_from_static_dipole_rotation(torque, additional_gradient);
+
+            for (int i = 0; i < n_mm; i++)
+                printf("MM atom %d gradient %.10f, %.10f, %.10f\n", i, additional_gradient[i*3+0], additional_gradient[i*3+1], additional_gradient[i*3+2]);
+            delete[] torque;
+            delete[] additional_gradient;
         }
 
         {

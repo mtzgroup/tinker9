@@ -18,7 +18,7 @@ int32_t internal_get_mm_static_point_dipole(double* dipoles);
 void internal_get_mm_polarizibility(double* polarizabilities);
 double internal_get_energy_nonpolar_mm_contribution();
 void internal_get_gradients_all_atoms_mm_contribution(double* grad);
-void internal_get_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad);
+void internal_append_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad);
 void internal_get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm);
 void internal_evaluate_induced_dipole_from_total_electric_field(
         const double* const electric_field_direct_mm,

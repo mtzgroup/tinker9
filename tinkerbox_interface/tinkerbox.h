@@ -138,7 +138,7 @@ extern "C"{
    *                  Should have the size of (3 * n_mm)
    * @param mm_grad Should have (3 * n_mm) space allocated beforehand.
    **/
-  DSOGLOBAL void get_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad);
+  DSOGLOBAL void append_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad);
   
   /**
    * \brief Get the MM contribution of electric field at each MM atom position.

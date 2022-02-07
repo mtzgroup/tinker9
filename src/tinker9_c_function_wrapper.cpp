@@ -21,6 +21,7 @@
 #include <tinker/detail/tors.hh>
 #include <tinker/detail/mpole.hh>
 #include <tinker/detail/polar.hh>
+#include <tinker/detail/chgpot.hh>
 #include <tinker/detail/units.hh>
 
 #define DIE(...) { printf(__VA_ARGS__); \
@@ -504,10 +505,57 @@ void internal_get_gradients_all_atoms_mm_contribution(double* grad)
     }
 }
 
-void internal_get_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
+void internal_append_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
 {
-    // TODO
-    DIE("get_gradient_from_static_dipole_rotation() not implemented!\n")
+    if (tinker::use_potent(tinker::mpole_term))
+    {
+        const size_t n_total = tinker::n;
+        tinker::real* all_torque = new tinker::real[n_total * 3];
+        tinker::grad_prec* all_gradient = new tinker::grad_prec[n_total * 3]; // This can be fixed point number!
+        memset(all_torque, 0, n_total * 3 * sizeof(tinker::real));
+        
+        tinker::darray::zero(tinker::g::q0, n_total, tinker::depx, tinker::depy, tinker::depz);
+
+        // The torque has the same unit as energy. Here we multiply a Coulomb constant, convert e^2/Bohr to KCal/mol.
+        const double torqueAU_to_kcalPerMol = 1.0 / tinker::units::bohr * tinker::chgpot::electric;
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            
+            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+                all_torque[i_xyz * n_total + i_mm] = mm_torque[i_i_mm * 3 + i_xyz] * torqueAU_to_kcalPerMol;
+        }
+        
+        tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqx, all_torque + n_total * 0);
+        tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqy, all_torque + n_total * 1);
+        tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqz, all_torque + n_total * 2);
+        tinker::wait_for(tinker::g::q0);
+        
+        const int vers = tinker::calc::grad;
+        tinker::torque(vers, tinker::depx, tinker::depy, tinker::depz);
+
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 0, tinker::depx);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 1, tinker::depy);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 2, tinker::depz);
+        tinker::wait_for(tinker::g::q0);
+
+        const double kcalPerMolPerAngstrom_to_hartreePerBohr = tinker::units::bohr / tinker::units::hartree;
+
+        for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+        {
+            int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
+                mm_grad[i_i_mm * 3 + i_xyz] += tinker::to_flt_host<double>(all_gradient[i_xyz * n_total + i_mm]) * kcalPerMolPerAngstrom_to_hartreePerBohr;
+        }
+
+        delete[] all_torque;
+        delete[] all_gradient;
+    }
+    else
+    {
+        printf("TC anchor: Warning: the static dipole rotation is accessed, but mpole is not specified in Tinker parameter.\n");
+    }
 }
 
 void internal_get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm)

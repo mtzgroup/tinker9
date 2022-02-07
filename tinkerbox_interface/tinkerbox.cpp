@@ -78,9 +78,9 @@ void get_gradients_all_atoms_mm_contribution(double* grad)
     internal_get_gradients_all_atoms_mm_contribution(grad);
 }
 
-void get_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
+void append_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
 {
-    internal_get_gradient_from_static_dipole_rotation(mm_torque, mm_grad);
+    internal_append_gradient_from_static_dipole_rotation(mm_torque, mm_grad);
 }
 
 void get_electric_field_mm_contribution(double* electric_field_direct_mm, double* electric_field_polarization_mm)
