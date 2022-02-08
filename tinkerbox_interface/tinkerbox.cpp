@@ -18,7 +18,7 @@ int32_t get_n_mm()
     return internal_get_n_mm();
 }
 
-void get_qm_atomic_indices(int* qm_atomic_numbers)
+void get_qm_atomic_indices(int32_t* qm_atomic_numbers)
 {
     internal_get_qm_atomic_indices(qm_atomic_numbers);
 }
@@ -63,9 +63,9 @@ int32_t get_mm_static_point_dipole(double* dipoles)
     return internal_get_mm_static_point_dipole(dipoles);
 }
 
-void get_mm_polarizibility(double* polarizabilities)
+void get_mm_polarizability(double* polarizabilities)
 {
-    internal_get_mm_polarizibility(polarizabilities);
+    internal_get_mm_polarizability(polarizabilities);
 }
 
 double get_energy_nonpolar_mm_contribution()

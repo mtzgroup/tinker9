@@ -146,7 +146,7 @@ int main()
 
         {
             double* polarizabilities = new double[n_mm];
-            get_mm_polarizibility(polarizabilities);
+            get_mm_polarizability(polarizabilities);
             for (int i_mm = 0; i_mm < n_mm; i_mm++)
                 printf("MM atom %d, polarizability = %.10f\n", i_mm, polarizabilities[i_mm]);
             delete[] polarizabilities;

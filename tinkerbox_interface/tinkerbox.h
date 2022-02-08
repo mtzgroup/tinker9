@@ -35,7 +35,7 @@ extern "C"{
    *
    * @param qm_atomic_numbers Should have n_qm space allocated beforehand.
    **/
-  DSOGLOBAL void get_qm_atomic_indices(int* qm_atomic_numbers);
+  DSOGLOBAL void get_qm_atomic_indices(int32_t* qm_atomic_numbers);
 
   /**
    * \brief Get the QM atom mass from tinker. In AMU, not in AU.
@@ -112,7 +112,7 @@ extern "C"{
    * 
    * @param dipoles Should have n_mm space allocated beforehand.
    **/
-  DSOGLOBAL void get_mm_polarizibility(double* polarizabilities);
+  DSOGLOBAL void get_mm_polarizability(double* polarizabilities);
 
   /**
    * \brief Get the MM contribution for the total energy, in Hartree.

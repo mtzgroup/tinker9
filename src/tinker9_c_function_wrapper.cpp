@@ -267,7 +267,7 @@ int32_t internal_get_n_mm()
     return QMMMGlobal::n_mm;
 }
 
-void internal_get_qm_atomic_indices(int* qm_atomic_numbers)
+void internal_get_qm_atomic_indices(int32_t* qm_atomic_numbers)
 {
     for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
     {
@@ -454,7 +454,7 @@ int32_t internal_get_mm_static_point_dipole(double* dipoles)
     }
 }
 
-void internal_get_mm_polarizibility(double* polarizabilities)
+void internal_get_mm_polarizability(double* polarizabilities)
 {
     if (tinker::use_potent(tinker::polar_term))
     {
@@ -476,7 +476,7 @@ void internal_get_mm_polarizibility(double* polarizabilities)
     }
     else
     {
-        printf("TC anchor: Warning: the polarizibility is accessed, but polar is not specified in Tinker parameter.\n");
+        printf("TC anchor: Warning: the polarizability is accessed, but polar is not specified in Tinker parameter.\n");
         memset(polarizabilities, 0, QMMMGlobal::n_mm * sizeof(double));
     }
 }
