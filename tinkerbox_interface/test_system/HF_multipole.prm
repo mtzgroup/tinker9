@@ -1,0 +1,170 @@
+
+      ##############################
+      ##                          ##
+      ##  Force Field Definition  ##
+      ##                          ##
+      ##############################
+
+
+forcefield              HF_TEST
+
+vdwtype                 LENNARD-JONES
+radiusrule              GEOMETRIC
+radiustype              SIGMA
+radiussize              RADIUS
+epsilonrule             GEOMETRIC
+dielectric              1.0
+
+
+      #############################
+      ##                         ##
+      ##  Literature References  ##
+      ##                         ##
+      #############################
+
+
+! This is a test modified from tiny.prm
+
+
+      #############################
+      ##                         ##
+      ##  Atom Type Definitions  ##
+      ##                         ##
+      #############################
+
+
+! atom  <atom_type_number>  atom_class_number  symbol  description  atomic_number  atomic_mass  number_of_bond_connected
+! Difference between atom_type and atom_class: 
+! Force field parameters that are somewhat less sensitive to local environment, such as local geometry terms, are then provided and assigned based on atom class.
+! Other energy parameters, such as electrostatic parameters, that are very environment dependent are assigned over the atom types.
+atom         11    H     "H Monovalent"                 1     1.000    1
+atom         91    F     "F Monovalent"                 9    18.000    1
+
+
+      ################################
+      ##                            ##
+      ##  Van der Waals Parameters  ##
+      ##                            ##
+      ################################
+
+
+! vdw  atom_class  atom_size(Angstroms)  homoatomic_well_depth(kcal/mole)  <reduction_factor_for_univalent_atoms>
+vdw          11               1.2000     1.1100
+vdw          91               1.4500     1.1100
+
+
+      ##################################
+      ##                              ##
+      ##  Bond Stretching Parameters  ##
+      ##                              ##
+      ##################################
+
+
+! bond  atom_class  atom_class  force_constant(kcal/mole/Ang^2)  ideal_bond_length(Angstroms)
+bond         11   91          500.00     0.9500 ! From 11 - 82 (H-O) in tiny.prm
+
+
+      ################################
+      ##                            ##
+      ##  Angle Bending Parameters  ##
+      ##                            ##
+      ################################
+
+
+! angle  atom_class  atom_class  atom_class   force_constant(kcal/mole/radian2)   ideal_bond_angles(degrees)  <2_more_ideal_bond_angles_for_hydrogen_environment>
+
+
+      ########################################
+      ##                                    ##
+      ##  Out-of-Plane Distance Parameters  ##
+      ##                                    ##
+      ########################################
+
+
+! opdist  center_atom_class  attached_atom_class  attached_atom_class  attached_atom_class  force_constant(kcal/mole/Ang^2)
+! The force constant is for the harmonic function of the out-of-plane distance of the central atom.
+
+
+      ############################
+      ##                        ##
+      ##  Torsional Parameters  ##
+      ##                        ##
+      ############################
+
+
+! torsion  atom_class  atom_class  atom_class  atom_class  <amplitude  phase_offset(degrees)  periodicity>
+
+
+      #####################################
+      ##                                 ##
+      ##  Bond Dipole Moment Parameters  ##
+      ##                                 ##
+      #####################################
+
+
+! dipole  atom_class  atom_class  bond_dipole(Debyes)  position_of_dipole_site_along_bond
+! If the bond dipole value is positive, then the first of the two atom types is the positive end of the dipole.
+! dipole       11   91          1.1000      0.500     ! alcohol/acid ! From 11 - 82 (H-O) in tiny.prm
+
+
+      ########################################
+      ##                                    ##
+      ##  Atomic Partial Charge Parameters  ##
+      ##                                    ##
+      ########################################
+
+
+! charge  atom_type  atomic_partial_charge(electrons)
+!charge         11             1.0
+!charge         91             -1.0
+
+
+      ###################################
+      ##                               ##
+      ##  Atomic Multipole Parameters  ##
+      ##                               ##
+      ###################################
+
+
+! multipole  atom_type  <i1  i2  i3>  charge(electrons)
+!                                     dipole_x  y  z(electons*Bohr)
+!                                     quadrupole_xx(electons*Bohr^2)
+!                                     quadrupole_xy  yy
+!                                     quadrupole_xz  yz  zz
+! i1, i2, i3 are atom_type or negative atom_type
+! if i1 = 0 or missing, then the local frame is not rotated when transformed into global frame
+! if i1 > 0 and i2 = 0 or missing, then the z-axis of the local frame is defined as the multipole-residing atom
+!   towards its smallest-indexed bonded neighbor with i1 atom type. x-axis and y-axis are random.
+!   This is the Z-only mode.
+! if i1 > 0 and i2 > 0, then the local z-axis is defined the same as Z-only, the x-axis is defined as:
+!   Find the smallest-indexed 1-2 bonded neighbor of multipole-residing atom with i2 atom type;
+!   if not find, find the 1-3 bonded neighbor.
+!   Define a plane with z-axis and that i2 type neighbor, put x-axis on that plane, pointing toward the neighbor.
+!   This is the Z-then-X mode.
+! if i1 < 0 and/or i2 < 0, there's Bisector modes, which you can find in
+!   kmpole.f (read prm file, find axis-defining neighbor atoms)
+!   rotpole.f (local frame to global transform)
+!   MOD_mpole.f (global variable definition)
+multipole   11    91                    1.0
+                                        0.0    0.0    0.0
+                                        0.0
+                                        0.0    0.0
+                                        0.0    0.0    0.0
+
+multipole   91                         -1.0
+                                        0.0    0.0    0.0
+                                        0.0
+                                        0.0    0.0
+                                        0.0    0.0    0.0
+
+
+      ########################################
+      ##                                    ##
+      ##  Dipole Polarizability Parameters  ##
+      ##                                    ##
+      ########################################
+
+
+! polarize  atom_class  dipole_polarizability(Ang^3, unchecked)  Thole_damping_term(unknown)  <type_of_atom_boned_to_polarizable_atom>
+polarize      11           0.5      1.0e5       91
+polarize      91           0.2      1.0e5       11

@@ -83,7 +83,7 @@ int main()
     {
         const int32_t n_qm = 4;
         const int32_t qm_indices[8] { 5, 6, 7, 8, 1, 2, 3, 4 };
-        const char* xyz = "/home/henryw7/test/tinker-banchmark/qmmm.xyz";
+        const char* xyz = "../tinkerbox_interface/test_system/qmmm.xyz";
         initialize_tinker(qm_indices, n_qm, xyz);
         const int32_t n_mm = get_n_mm();
         const int32_t n_total = n_mm + n_qm;
