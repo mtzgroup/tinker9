@@ -539,7 +539,6 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqx, all_torque + n_total * 0);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqy, all_torque + n_total * 1);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqz, all_torque + n_total * 2);
-        tinker::wait_for(tinker::g::q0);
         
         // Warning: grad_prec type can be fixed point number, which will not convert to double correctly by default!
         tinker::grad_prec* all_gradient = new tinker::grad_prec[n_total * 3];
@@ -547,6 +546,7 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
         tinker::grad_prec* d_depx_from_rot, * d_depy_from_rot, * d_depz_from_rot;
         tinker::darray::allocate(n_total, &d_depx_from_rot, &d_depy_from_rot, &d_depz_from_rot);
         tinker::darray::zero(tinker::g::q0, n_total, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
+        tinker::wait_for(tinker::g::q0);
         
         const int vers = tinker::calc::grad;
         tinker::torque(vers, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
