@@ -64,6 +64,11 @@ void x_testgrad(int, char**)
               "dE/dX %1$5s dE/dY %1$5s dE/dZ %1$8s Norm\n";
       fmt = "\n Anlyt%10d       %12.4f%12.4f%12.4f  %12.4f";
    }
+   // Henry 20220209: Hardcoded to print longer
+   fmt_t = "\n  Type    Atom %1$8s "
+            "dE/dX %1$9s dE/dY %1$9s dE/dZ %1$9s Norm\n";
+   fmt = "\n Anlyt%8d %16.10f %16.10f %16.10f %16.10f";
+
    print(out, fmt_t, "");
    // auto do_print = [](int i, int n, int top_m) {
    //    if (n <= 2 * top_m)

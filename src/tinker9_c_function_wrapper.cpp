@@ -485,6 +485,7 @@ double internal_get_energy_nonpolar_mm_contribution()
 {
     tinker::energy(tinker::rc_flag);
 
+    printf("TC ancho: Total MM energy = %.10f KCal/mol\n", tinker::esum);
     printf("TC anchor: removing energy_ep from total energy in get_energy_nonpolar_mm_contribution(), energy_ep = %.10f Kcal/mol\n", tinker::energy_ep);
 
     return (tinker::esum - tinker::energy_ep) / tinker::units::hartree;
@@ -494,15 +495,24 @@ void internal_get_gradients_all_atoms_mm_contribution(double* grad)
 {
     tinker::energy(tinker::rc_flag);
 
-    std::vector<double> gdx(tinker::n), gdy(tinker::n), gdz(tinker::n);
-    tinker::copy_gradient(tinker::calc::grad, gdx.data(), gdy.data(), gdz.data());
+    const size_t n_total = tinker::n;
+    double* gdx = new double[n_total];
+    double* gdy = new double[n_total];
+    double* gdz = new double[n_total];
+    tinker::copy_gradient(tinker::calc::grad, gdx, gdy, gdz);
 
-    for (size_t i_atom = 0; i_atom < tinker::n; i_atom++)
+    const double kcalPerMolPerAngstrom_to_hartreePerBohr = tinker::units::bohr / tinker::units::hartree;
+
+    for (size_t i_atom = 0; i_atom < n_total; i_atom++)
     {
-        grad[i_atom * 3 + 0] = gdx[i_atom];
-        grad[i_atom * 3 + 1] = gdy[i_atom];
-        grad[i_atom * 3 + 2] = gdz[i_atom];
+        grad[i_atom * 3 + 0] = gdx[i_atom] * kcalPerMolPerAngstrom_to_hartreePerBohr;
+        grad[i_atom * 3 + 1] = gdy[i_atom] * kcalPerMolPerAngstrom_to_hartreePerBohr;
+        grad[i_atom * 3 + 2] = gdz[i_atom] * kcalPerMolPerAngstrom_to_hartreePerBohr;
     }
+
+    delete[] gdx;
+    delete[] gdy;
+    delete[] gdz;
 }
 
 void internal_append_gradient_from_static_dipole_rotation(const double* const mm_torque, double* mm_grad)
@@ -511,10 +521,7 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
     {
         const size_t n_total = tinker::n;
         tinker::real* all_torque = new tinker::real[n_total * 3];
-        tinker::grad_prec* all_gradient = new tinker::grad_prec[n_total * 3]; // This can be fixed point number!
         memset(all_torque, 0, n_total * 3 * sizeof(tinker::real));
-        
-        tinker::darray::zero(tinker::g::q0, n_total, tinker::depx, tinker::depy, tinker::depz);
 
         // The torque has the same unit as energy. Here we multiply a Coulomb constant, convert e^2/Bohr to KCal/mol.
         const double torqueAU_to_kcalPerMol = 1.0 / tinker::units::bohr * tinker::chgpot::electric;
@@ -527,17 +534,26 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
                 all_torque[i_xyz * n_total + i_mm] = mm_torque[i_i_mm * 3 + i_xyz] * torqueAU_to_kcalPerMol;
         }
         
+        // tinker::trq[xyz] is defined in include/mod.mpole.h, allocated in src/elec.cpp::pole_data().
+        // It's allocated as long as (rc_flag & calc::grad), which is done in all interface cases.
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqx, all_torque + n_total * 0);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqy, all_torque + n_total * 1);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqz, all_torque + n_total * 2);
         tinker::wait_for(tinker::g::q0);
         
+        // Warning: grad_prec type can be fixed point number, which will not convert to double correctly by default!
+        tinker::grad_prec* all_gradient = new tinker::grad_prec[n_total * 3];
+        // There are dep[xyz] variables in mod.polar.h, but it's not guaranteed to be allocated, so we use our own copy.
+        tinker::grad_prec* d_depx_from_rot, * d_depy_from_rot, * d_depz_from_rot;
+        tinker::darray::allocate(n_total, &d_depx_from_rot, &d_depy_from_rot, &d_depz_from_rot);
+        tinker::darray::zero(tinker::g::q0, n_total, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
+        
         const int vers = tinker::calc::grad;
-        tinker::torque(vers, tinker::depx, tinker::depy, tinker::depz);
+        tinker::torque(vers, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
 
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 0, tinker::depx);
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 1, tinker::depy);
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 2, tinker::depz);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 0, d_depx_from_rot);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 1, d_depy_from_rot);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 2, d_depz_from_rot);
         tinker::wait_for(tinker::g::q0);
 
         const double kcalPerMolPerAngstrom_to_hartreePerBohr = tinker::units::bohr / tinker::units::hartree;
@@ -550,6 +566,7 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
         }
 
         delete[] all_torque;
+        tinker::darray::deallocate(d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
         delete[] all_gradient;
     }
     else
