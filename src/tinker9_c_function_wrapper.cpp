@@ -50,7 +50,7 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
      * Implemented in tinker/tinker8_fortran_function_wrapper.f
      * This function reads in the xyz file and key file.
      */
-    const int32_t xyzfile_string_length = strlen(xyzfile);
+    const int32_t xyzfile_string_length = strlen(xyzfile) + 1;
     tinkerbox_getxyz_(xyzfile, &xyzfile_string_length);
 
     /**
