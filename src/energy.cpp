@@ -3,6 +3,7 @@
 #include "glob.dhflow.h"
 #include "md.h"
 #include "nblist.h"
+#include "qmmm_global.h"
 #include "potent.h"
 #include "tool/cudalib.h"
 #include "tool/error.h"
@@ -342,8 +343,9 @@ void energy(int vers, unsigned tsflag, const TimeScaleConfig& tsconfig)
          if (ecore_vdw && eng_buf_vdw) {
             energy_vdw += to_flt_host<energy_prec>(detail::ev_hobj.e_vdw);
          }
-         if (ecore_ele && eng_buf_elec) {
-            energy_elec += to_flt_host<energy_prec>(detail::ev_hobj.e_ele);
+         // Henry 20220210: For QMMM, energy_elec is already filled in at each corresponding calculations.
+         if (ecore_ele && eng_buf_elec && QMMMGlobal::n_qm > 0) {
+               energy_elec += to_flt_host<energy_prec>(detail::ev_hobj.e_ele);
          }
       }
       esum = energy_valence + energy_vdw + energy_elec;

@@ -223,10 +223,14 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
      * Allocate helper arrays for QMMM induced dipole SCF.
      * TODO: not deallocated
      */
+    QMMMGlobal::if_replace_electric_field_for_compute_induced_dipole = false;
+    QMMMGlobal::if_replace_induced_dipole_for_compute_polar_gradient = false;
     if (tinker::use_potent(tinker::polar_term))
     {
         tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_electric_field_d);
         tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_electric_field_p);
+        tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_uind_temporary);
+        tinker::darray::allocate(tinker::n, &QMMMGlobal::d_qmmm_uinp_temporary);
     }
     
     /**
@@ -485,7 +489,17 @@ double internal_get_energy_nonpolar_mm_contribution()
 {
     tinker::energy(tinker::rc_flag);
 
-    printf("TC ancho: Total MM energy = %.10f KCal/mol\n", tinker::esum);
+    // Henry 20220210: I used a very hacky solution here to get around with Tinker's logic
+    //                 of reusing variable eng_buf_elec (include/glob.energi.h) for variable
+    //                 em and ep. We need the polarization energy, but the electric components
+    //                 of the energy is accumulated in eng_buf_elec, so there's no easy way
+    //                 to get ep out.
+    //                 My solution is that, for each electric term, I turned on rc_a,
+    //                 so that it'll clear eng_buf_elec before energy computation, and compute
+    //                 corresponding energy (ep, em) and accumulate energy_elec after computation
+    //                 is done.
+
+    printf("TC anchor: Total MM energy = %.10f KCal/mol\n", tinker::esum);
     printf("TC anchor: removing energy_ep from total energy in get_energy_nonpolar_mm_contribution(), energy_ep = %.10f Kcal/mol\n", tinker::energy_ep);
 
     return (tinker::esum - tinker::energy_ep) / tinker::units::hartree;
@@ -493,9 +507,21 @@ double internal_get_energy_nonpolar_mm_contribution()
 
 void internal_get_gradients_all_atoms_mm_contribution(double* grad)
 {
+    const size_t n_total = tinker::n;
+
+    if (tinker::use_potent(tinker::polar_term))
+    {
+        tinker::darray::copy(tinker::g::q0, n_total, QMMMGlobal::d_qmmm_uind_temporary, tinker::uind);
+        tinker::darray::copy(tinker::g::q0, n_total, QMMMGlobal::d_qmmm_uinp_temporary, tinker::uinp);
+        tinker::wait_for(tinker::g::q0);
+        
+        QMMMGlobal::if_replace_induced_dipole_for_compute_polar_gradient = true;
+    }
+
     tinker::energy(tinker::rc_flag);
 
-    const size_t n_total = tinker::n;
+    QMMMGlobal::if_replace_induced_dipole_for_compute_polar_gradient = false;
+
     double* gdx = new double[n_total];
     double* gdy = new double[n_total];
     double* gdz = new double[n_total];
@@ -533,27 +559,25 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
             for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
                 all_torque[i_xyz * n_total + i_mm] = mm_torque[i_i_mm * 3 + i_xyz] * torqueAU_to_kcalPerMol;
         }
-        
+
         // tinker::trq[xyz] is defined in include/mod.mpole.h, allocated in src/elec.cpp::pole_data().
         // It's allocated as long as (rc_flag & calc::grad), which is done in all interface cases.
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqx, all_torque + n_total * 0);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqy, all_torque + n_total * 1);
         tinker::darray::copyin(tinker::g::q0, n_total, tinker::trqz, all_torque + n_total * 2);
-        
+
         // Warning: grad_prec type can be fixed point number, which will not convert to double correctly by default!
         tinker::grad_prec* all_gradient = new tinker::grad_prec[n_total * 3];
-        // There are dep[xyz] variables in mod.polar.h, but it's not guaranteed to be allocated, so we use our own copy.
-        tinker::grad_prec* d_depx_from_rot, * d_depy_from_rot, * d_depz_from_rot;
-        tinker::darray::allocate(n_total, &d_depx_from_rot, &d_depy_from_rot, &d_depz_from_rot);
-        tinker::darray::zero(tinker::g::q0, n_total, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
-        tinker::wait_for(tinker::g::q0);
-        
-        const int vers = tinker::calc::grad;
-        tinker::torque(vers, d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
 
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 0, d_depx_from_rot);
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 1, d_depy_from_rot);
-        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 2, d_depz_from_rot);
+        tinker::darray::zero(tinker::g::q0, n_total, tinker::demx, tinker::demy, tinker::demz);
+        tinker::wait_for(tinker::g::q0);
+
+        const int vers = tinker::calc::grad;
+        tinker::torque(vers, tinker::demx, tinker::demy, tinker::demz);
+
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 0, tinker::demx);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 1, tinker::demy);
+        tinker::darray::copyout(tinker::g::q0, n_total, all_gradient + n_total * 2, tinker::demz);
         tinker::wait_for(tinker::g::q0);
 
         const double kcalPerMolPerAngstrom_to_hartreePerBohr = tinker::units::bohr / tinker::units::hartree;
@@ -566,7 +590,6 @@ void internal_append_gradient_from_static_dipole_rotation(const double* const mm
         }
 
         delete[] all_torque;
-        tinker::darray::deallocate(d_depx_from_rot, d_depy_from_rot, d_depz_from_rot);
         delete[] all_gradient;
     }
     else
@@ -651,8 +674,12 @@ void internal_evaluate_induced_dipole_from_total_electric_field(
         tinker::darray::copyin(tinker::g::q0, n_total, QMMMGlobal::d_qmmm_electric_field_p, all_Ep);
         tinker::wait_for(tinker::g::q0);
 
+        QMMMGlobal::if_replace_electric_field_for_compute_induced_dipole = true;
+
         // Actual induce() function call
         tinker::induce_mutual_pcg1(tinker::uind, tinker::uinp);
+
+        QMMMGlobal::if_replace_electric_field_for_compute_induced_dipole = false;
 
         tinker::real* all_mu_d = workspace_n_mm_times_6;
         tinker::real* all_mu_p = workspace_n_mm_times_6 + n_total * 3;

@@ -249,7 +249,7 @@ int main()
             append_gradient_from_static_dipole_rotation(torque, additional_gradient);
 
             for (int i = 0; i < n_mm; i++)
-                printf("MM atom %d gradient %.10f, %.10f, %.10f\n", i, additional_gradient[i*3+0], additional_gradient[i*3+1], additional_gradient[i*3+2]);
+                printf("MM atom %d gradient from rotation = %.10f, %.10f, %.10f\n", i, additional_gradient[i*3+0], additional_gradient[i*3+1], additional_gradient[i*3+2]);
             delete[] torque;
             delete[] additional_gradient;
         }

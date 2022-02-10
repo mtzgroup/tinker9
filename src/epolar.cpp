@@ -611,6 +611,14 @@ void epolar_nonewald(int vers)
       ver2 &= ~calc::energy; // toggle off the calc::energy flag
 
    induce(uind, uinp);
+   
+   if (QMMMGlobal::if_replace_induced_dipole_for_compute_polar_gradient)
+   {
+      tinker::darray::copy(g::q0, n, uind, QMMMGlobal::d_qmmm_uind_temporary);
+      tinker::darray::copy(g::q0, n, uinp, QMMMGlobal::d_qmmm_uinp_temporary);
+      tinker::wait_for(g::q0);
+   }
+
    if (edot)
       epolar0_dotprod(uind, udirp);
    if (vers != calc::v0) {
@@ -640,6 +648,14 @@ void epolar_ewald(int vers)
       ver2 &= ~calc::energy; // toggle off the calc::energy flag
 
    induce(uind, uinp);
+   
+   if (QMMMGlobal::if_replace_induced_dipole_for_compute_polar_gradient)
+   {
+      tinker::darray::copy(g::q0, n, uind, QMMMGlobal::d_qmmm_uind_temporary);
+      tinker::darray::copy(g::q0, n, uinp, QMMMGlobal::d_qmmm_uinp_temporary);
+      tinker::wait_for(g::q0);
+   }
+
    if (edot)
       epolar0_dotprod(uind, udirp);
    if (vers != calc::v0) {

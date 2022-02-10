@@ -233,7 +233,8 @@ void induce_mutual_pcg1_acc(real (*uind)[3], real (*uinp)[3])
    }
 
    // get the electrostatic field due to permanent multipoles
-   if (QMMMGlobal::n_qm > 0)
+   if (QMMMGlobal::if_replace_electric_field_for_compute_induced_dipole
+       && QMMMGlobal::n_qm > 0)
    {
       darray::copy(g::q0, n, field, QMMMGlobal::d_qmmm_electric_field_d);
       darray::copy(g::q0, n, fieldp, QMMMGlobal::d_qmmm_electric_field_p);
