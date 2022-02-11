@@ -533,7 +533,6 @@ void induce(real (*ud)[3], real (*up)[3])
 void epolar(int vers)
 {
    bool rc_a = rc_flag & calc::analyz;
-   rc_a = rc_a || (QMMMGlobal::n_qm > 0); // Henry 20220126: Turn recording on when running QMMM.
    bool do_a = vers & calc::analyz;
    bool do_e = vers & calc::energy;
    bool do_v = vers & calc::virial;
@@ -554,6 +553,14 @@ void epolar(int vers)
          darray::zero(g::q0, n, depx, depy, depz);
       }
    }
+
+    // Henry 20220210: The logic here is to get around with Tinker's logic of reusing variable
+    //                 eng_buf_elec (include/glob.energi.h) for variable em and ep. We need the
+    //                 polarization energy, but the electric components of the energy is accumulated
+    //                 in eng_buf_elec, so we need to substract that out.
+   double qmmm_previous_energy = 0.0;
+   if (!rc_a && QMMMGlobal::n_qm > 0)
+      qmmm_previous_energy = energy_reduce(ep);
 
 
    mpole_init(vers);
@@ -592,6 +599,10 @@ void epolar(int vers)
       if (do_g)
          sum_gradient(gx_elec, gy_elec, gz_elec, depx, depy, depz);
    }
+   
+   // Henry 20220210: See comment above
+   if (!rc_a && QMMMGlobal::n_qm > 0)
+      energy_ep = energy_reduce(ep) - qmmm_previous_energy;
 }
 
 

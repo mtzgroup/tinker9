@@ -2,7 +2,6 @@
 #include "md.h"
 #include "nblist.h"
 #include "potent.h"
-#include "qmmm_global.h"
 #include "tool/host_zero.h"
 #include <tinker/detail/mplpot.hh>
 #include <tinker/detail/sizes.hh>
@@ -52,7 +51,6 @@ void empole_data(rc_op op)
 void empole(int vers)
 {
    bool rc_a = rc_flag & calc::analyz;
-   rc_a = rc_a || (QMMMGlobal::n_qm > 0); // Henry 20220126: Turn recording on when running QMMM.
    bool do_a = vers & calc::analyz;
    bool do_e = vers & calc::energy;
    bool do_v = vers & calc::virial;

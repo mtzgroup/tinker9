@@ -6,7 +6,6 @@
 #include "nblist.h"
 #include "pme.h"
 #include "potent.h"
-#include "qmmm_global.h"
 #include "tool/host_zero.h"
 #include "tool/io_fort_str.h"
 #include "tool/io_print.h"
@@ -184,7 +183,6 @@ void induce2(real (*ud)[3])
 void epolar_chgpen(int vers)
 {
    bool rc_a = rc_flag & calc::analyz;
-   rc_a = rc_a || (QMMMGlobal::n_qm > 0); // Henry 20220126: Turn recording on when running QMMM.
    bool do_a = vers & calc::analyz;
    bool do_e = vers & calc::energy;
    bool do_v = vers & calc::virial;

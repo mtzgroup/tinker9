@@ -489,16 +489,6 @@ double internal_get_energy_nonpolar_mm_contribution()
 {
     tinker::energy(tinker::rc_flag);
 
-    // Henry 20220210: I used a very hacky solution here to get around with Tinker's logic
-    //                 of reusing variable eng_buf_elec (include/glob.energi.h) for variable
-    //                 em and ep. We need the polarization energy, but the electric components
-    //                 of the energy is accumulated in eng_buf_elec, so there's no easy way
-    //                 to get ep out.
-    //                 My solution is that, for each electric term, I turned on rc_a,
-    //                 so that it'll clear eng_buf_elec before energy computation, and compute
-    //                 corresponding energy (ep, em) and accumulate energy_elec after computation
-    //                 is done.
-
     printf("TC anchor: Total MM energy = %.10f KCal/mol\n", tinker::esum);
     printf("TC anchor: removing energy_ep from total energy in get_energy_nonpolar_mm_contribution(), energy_ep = %.10f Kcal/mol\n", tinker::energy_ep);
 
