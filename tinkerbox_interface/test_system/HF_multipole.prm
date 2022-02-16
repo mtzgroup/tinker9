@@ -146,16 +146,16 @@ bond         11   91          500.00     0.9500 ! From 11 - 82 (H-O) in tiny.prm
 !   rotpole.f (local frame to global transform)
 !   MOD_mpole.f (global variable definition)
 multipole   11    91                    1.0
-                                        0.0    0.0    0.0
+                                        0.0    0.0    1.0
                                         0.0
                                         0.0    0.0
-                                        0.0    0.0    0.0
+                                        0.0    0.0    1.0
 
 multipole   91                         -1.0
-                                        0.0    0.0    0.0
+                                        0.0    0.0    2.0
                                         0.0
                                         0.0    0.0
-                                        0.0    0.0    0.0
+                                        0.0    1.0    0.0
 
 
       ########################################

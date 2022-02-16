@@ -96,15 +96,16 @@ extern "C"{
   /**
    * \brief Get the MM static dipoles, specified in prm file "multipole" keyword, in global coordinate, in electron*Bohr.
    * Important: The "multipole" parameters have Bohr in length unit! See "kmpole.f", there's a unit conversion line.
+   *            The quadrupoles are also divided by 3 before stored to memory.
    * Important: If Z-only mode is used for local coordinate definition, make sure there's no local x and y component
    *            of that dipole, otherwise the dipole obtained from this function is inconsistent with
    *            that used for energy calculation.
    *
    * @param dipoles Should have (3 * n_mm) space allocated beforehand.
-   *                Returned dipoles are ordered in x0,y0,z0,x1,y1,z1,...
-   * @return "npole" variable in tinker memory, suppose to return (n_qm + n_mm). For error checking.
+   *                Returned dipoles are ordered in x0,y0,z0, x1,y1,z1,...
+   *                Returned quadrupoles are ordered in xx0,xy0,xz0,yx0,yy0,yz0,zx0,zy0,zz0, xx1,xy1...
    **/
-  DSOGLOBAL int32_t get_mm_static_point_dipole(double* dipoles);
+  DSOGLOBAL void get_mm_static_point_dipole_and_quadrupole(double* dipoles, double* quadrupoles);
 
   /**
    * \brief Get the MM polarizability, specified in prm file "polarize" keyword, in Bohr^3.

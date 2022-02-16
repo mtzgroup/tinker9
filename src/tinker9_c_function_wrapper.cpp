@@ -412,7 +412,7 @@ void internal_get_mm_charge(double* charges)
         for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
         {
             int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
-            charges[i_i_mm] = all_multipole[i_mm * tinker::mpl_total + 0];
+            charges[i_i_mm] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_0];
         }
 
         delete[] all_multipole;
@@ -428,7 +428,7 @@ void internal_get_mm_charge(double* charges)
         DIE("Both charge and multipole (used automatically with polarize) is specified in Tinker parameter, which will cause inconsistency!\n")
 }
 
-int32_t internal_get_mm_static_point_dipole(double* dipoles)
+void internal_get_mm_static_point_dipole_and_quadrupole(double* dipoles, double* quadrupoles)
 {
     tinker::chkpole();
     tinker::rotpole();
@@ -440,21 +440,34 @@ int32_t internal_get_mm_static_point_dipole(double* dipoles)
         tinker::darray::copyout(tinker::g::q0, n_total, all_multipole, tinker::rpole);
         tinker::wait_for(tinker::g::q0);
 
+        const double angstrom_to_bohr_square = 1.0 / tinker::units::bohr / tinker::units::bohr;
+
         for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
         {
             int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
-            for (size_t i_xyz = 0; i_xyz < 3; i_xyz++)
-                dipoles[i_i_mm * 3 + i_xyz] = all_multipole[i_mm * tinker::mpl_total + (i_xyz + 1)] / tinker::units::bohr;
+            
+            dipoles[i_i_mm * 3 + 0] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_x] / tinker::units::bohr;
+            dipoles[i_i_mm * 3 + 1] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_y] / tinker::units::bohr;
+            dipoles[i_i_mm * 3 + 2] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_z] / tinker::units::bohr;
+
+            quadrupoles[i_i_mm * 9 + 0] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_xx] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 1] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_xy] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 2] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_xz] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 3] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_yx] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 4] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_yy] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 5] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_yz] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 6] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_zx] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 7] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_zy] * angstrom_to_bohr_square;
+            quadrupoles[i_i_mm * 9 + 8] = all_multipole[i_mm * tinker::mpl_total + tinker::mpl_pme_zz] * angstrom_to_bohr_square;
         }
 
         delete[] all_multipole;
-        return tinker::n;
     }
     else
     {
-        printf("TC anchor: Warning: the static dipole is accessed, but mpole is not specified in Tinker parameter.\n");
+        printf("TC anchor: Warning: the static dipole and quadrupole is accessed, but mpole is not specified in Tinker parameter.\n");
         memset(dipoles, 0, QMMMGlobal::n_mm * 3 * sizeof(double));
-        return 0;
+        memset(quadrupoles, 0, QMMMGlobal::n_mm * 9 * sizeof(double));
     }
 }
 

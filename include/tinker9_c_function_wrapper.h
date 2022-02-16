@@ -14,7 +14,7 @@ void internal_set_qm_xyz(const double* const qm_coords);
 void internal_get_mm_xyz(double* mm_coords);
 void internal_set_mm_xyz(const double* const mm_coords);
 void internal_get_mm_charge(double* charges);
-int32_t internal_get_mm_static_point_dipole(double* dipoles);
+void internal_get_mm_static_point_dipole_and_quadrupole(double* dipoles, double* quadrupoles);
 void internal_get_mm_polarizability(double* polarizabilities);
 double internal_get_energy_nonpolar_mm_contribution();
 void internal_get_gradients_all_atoms_mm_contribution(double* grad);

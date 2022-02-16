@@ -58,9 +58,9 @@ void get_mm_charge(double* charges)
     internal_get_mm_charge(charges);
 }
 
-int32_t get_mm_static_point_dipole(double* dipoles)
+void get_mm_static_point_dipole_and_quadrupole(double* dipoles, double* quadrupoles)
 {
-    return internal_get_mm_static_point_dipole(dipoles);
+    internal_get_mm_static_point_dipole_and_quadrupole(dipoles, quadrupoles);
 }
 
 void get_mm_polarizability(double* polarizabilities)

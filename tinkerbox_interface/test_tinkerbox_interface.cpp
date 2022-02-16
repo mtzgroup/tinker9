@@ -138,10 +138,21 @@ int main()
 
         {
             double* dipoles = new double[n_mm * 3];
-            get_mm_static_point_dipole(dipoles);
+            double* quadrupoles = new double[n_mm * 9];
+            get_mm_static_point_dipole_and_quadrupole(dipoles, quadrupoles);
+
             for (int i_mm = 0; i_mm < n_mm; i_mm++)
                 printf("MM atom %d, dipole = (%.10f, %.10f, %.10f)\n", i_mm, dipoles[i_mm * 3 + 0], dipoles[i_mm * 3 + 1], dipoles[i_mm * 3 + 2]);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %2d, quadrupole = (%.10f, %.10f, %.10f,\n"
+                       "                          %.10f, %.10f, %.10f,\n"
+                       "                          %.10f, %.10f, %.10f)\n", i_mm,
+                    quadrupoles[i_mm * 9 + 0], quadrupoles[i_mm * 9 + 1], quadrupoles[i_mm * 9 + 2],
+                    quadrupoles[i_mm * 9 + 3], quadrupoles[i_mm * 9 + 4], quadrupoles[i_mm * 9 + 5],
+                    quadrupoles[i_mm * 9 + 6], quadrupoles[i_mm * 9 + 7], quadrupoles[i_mm * 9 + 8]);
+
             delete[] dipoles;
+            delete[] quadrupoles;
         }
 
         {
