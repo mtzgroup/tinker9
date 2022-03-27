@@ -8,6 +8,7 @@
 
 forcefield              HF_TEST
 
+#vdwtype                 BUFFERED-14-7
 vdwtype                 LENNARD-JONES
 radiusrule              GEOMETRIC
 radiustype              SIGMA

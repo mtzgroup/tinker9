@@ -7,6 +7,7 @@ void internal_initialize_tinker(const int32_t* const qm_indices, const int32_t n
 int32_t internal_get_n_qm();
 int32_t internal_get_n_mm();
 void internal_get_qm_atomic_indices(int32_t* qm_atomic_numbers);
+void internal_get_mm_atomic_indices(int32_t* mm_atomic_numbers);
 void internal_get_qm_mass(double* qm_masses);
 void internal_get_mm_mass(double* mm_masses);
 void internal_get_qm_xyz(double* qm_coords);

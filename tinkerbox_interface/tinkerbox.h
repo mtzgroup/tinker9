@@ -38,6 +38,13 @@ extern "C"{
   DSOGLOBAL void get_qm_atomic_indices(int32_t* qm_atomic_numbers);
 
   /**
+   * \brief Get the MM atomic numbers from tinker. Needed in order to print MM atom name.
+   *
+   * @param mm_atomic_numbers Should have n_mm space allocated beforehand.
+   **/
+  DSOGLOBAL void get_mm_atomic_indices(int32_t* mm_atomic_numbers);
+
+  /**
    * \brief Get the QM atom mass from tinker. In AMU, not in AU.
    *
    * @param qm_masses Should have n_qm space allocated beforehand.

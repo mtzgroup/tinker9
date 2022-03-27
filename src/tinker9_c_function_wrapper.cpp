@@ -12,6 +12,7 @@
 #include "elec.h" // chkpole(), rotpole()
 #include "field.h" // dfield()
 #include "tool/darray.h"
+#include "mod.vdwpot.h" // evdw_t
 
 #include <tinker/detail/atoms.hh>
 #include <tinker/detail/atomid.hh>
@@ -280,6 +281,15 @@ void internal_get_qm_atomic_indices(int32_t* qm_atomic_numbers)
     }
 }
 
+void internal_get_mm_atomic_indices(int32_t* mm_atomic_numbers)
+{
+    for (size_t i_i_mm = 0; i_i_mm < QMMMGlobal::n_mm; i_i_mm++)
+    {
+        int32_t i_mm = QMMMGlobal::mm_indices[i_i_mm] - 1; // One-index to zero-index
+        mm_atomic_numbers[i_i_mm] = tinker::atomid::atomic[i_mm];
+    }
+}
+
 void internal_get_qm_mass(double* qm_masses)
 {
     for (size_t i_i_qm = 0; i_i_qm < QMMMGlobal::n_qm; i_i_qm++)
@@ -336,6 +346,12 @@ void internal_set_qm_xyz(const double* const qm_coords)
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::ypos, tinker::atoms::y);
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::zpos, tinker::atoms::z);
     tinker::copy_pos_to_xyz();
+
+    // Henry 20220327: If running BUFFERED-14-7 vdw calculation, there's another set of coordinates
+    // [xyz]red, which is set in src/nblist.cpp::nblist_data(). It needs to be reset each time coordinates
+    // changed.
+    if (tinker::vdwtyp == tinker::evdw_t::hal)
+        tinker::ehal_reduce_xyz();
 }
 
 void internal_get_mm_xyz(double* mm_coords)
@@ -376,6 +392,10 @@ void internal_set_mm_xyz(const double* const mm_coords)
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::ypos, tinker::atoms::y);
     tinker::darray::copyin(tinker::g::q0, tinker::n, tinker::zpos, tinker::atoms::z);
     tinker::copy_pos_to_xyz();
+
+    // Henry 20220327: See comment in internal_set_qm_xyz()
+    if (tinker::vdwtyp == tinker::evdw_t::hal)
+        tinker::ehal_reduce_xyz();
 }
 
 void internal_get_mm_charge(double* charges)

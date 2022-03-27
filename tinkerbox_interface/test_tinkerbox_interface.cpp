@@ -95,6 +95,14 @@ int main()
                 printf("QM atom %d, atomic type = %d\n", i_qm, qm_atom_type[i_qm]);
             delete[] qm_atom_type;
         }
+
+        {
+            int32_t* mm_atom_type = new int32_t[n_mm];
+            get_mm_atomic_indices(mm_atom_type);
+            for (int i_mm = 0; i_mm < n_mm; i_mm++)
+                printf("MM atom %d, atomic type = %d\n", i_mm, mm_atom_type[i_mm]);
+            delete[] mm_atom_type;
+        }
         
         {
             double* qm_mass = new double[n_qm];
@@ -166,7 +174,7 @@ int main()
         {
             double energy = get_energy_nonpolar_mm_contribution();
             printf("energy = %.10f\n", energy);
-        }   
+        }
 
         // {
         //     double new_xyz[12] = {

@@ -23,6 +23,11 @@ void get_qm_atomic_indices(int32_t* qm_atomic_numbers)
     internal_get_qm_atomic_indices(qm_atomic_numbers);
 }
 
+void get_mm_atomic_indices(int32_t* mm_atomic_numbers)
+{
+    internal_get_mm_atomic_indices(mm_atomic_numbers);
+}
+
 void get_qm_mass(double* qm_masses)
 {
     internal_get_qm_mass(qm_masses);
